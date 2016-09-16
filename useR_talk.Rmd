@@ -1,0 +1,286 @@
+---
+title: "ETL for Medium Data"
+author: "Ben Baumer"
+date: "June 28, 2016 <br> (http://bit.ly/2956MSc)"
+output: 
+  ioslides_presentation:
+    css: styles.css
+    logo: smith_transparent.png
+---
+
+## Data size for a single user {.build}
+
+<div class="storage"><img src="http://news.techgenie.com/files/RAM2.jpg" width="250px"></div>
+
+<div class="storage"><img src="http://www.karbosguide.com/books/pcarchitecture/images/893.jpg" width="250px"></div>
+
+<div><img src="http://hpcinnovationcenter.llnl.gov/sites/default/files/styles/lead-image/public/HPC-computer-cluster-LLNL-large2-web.png" width="250px"></div>
+
+
+"Size" | size | hardware | software
+-------|------|----------|-----
+small  | < several GB | RAM | R
+medium | several GB -- a few TB | hard disk | SQL
+big    | many TB or more | cluster | Spark?
+
+
+## Many interesting data sets are **medium**-sized
+
+[Bureau of Transportation Statistics on-time flight data](http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=120&Link=0)
+
+package       | timespan | airports | size
+--------------|----------|----------|------
+`hflights`    |  2011  | IAH, HOU  | 2.1 MB
+`nycflights13` | 2013 | LGA, JFK, EWR | 4.4 MB
+`airlines` | 1987--2016 | ~350 | ~5 GB
+
+
+## Challenges of medium data - size
+
+* Everything takes a little longer...
+    * downloading
+    * wrangling
+    * querying
+* Takes up space on disk
+* Too big to work with in memory, but...
+
+> - ...many (most?) R users don't know SQL
+>     - even if they know `SELECT`, they probably don't know `CREATE TABLE`
+
+## [ETL](http://en.wikipedia.org/wiki/ETL) verbs
+
+* Extract
+    * download
+* Transform
+    * wrangle
+* Load
+    * into SQL
+
+## Challenges of medium data - ETL
+
+> - [Repackaging problematic](http://www.nytimes.com/2008/06/03/sports/baseball/03fantasy.html?_r=0)
+    * licensing?
+    * data size
+    * live data streams
+
+> - How can we do [reproducible research](project tier) on medium data...
+    * ...when we can't re-post the data (legally or technically)?
+    * ...when our download scripts aren't cross-platform?
+
+
+## Potential solutions
+
+> - Write a CRAN package...
+    * static data limited to 5 MB!!
+> - Leave the package on GitHub...
+    * with `devtools::use_data_raw`
+    * users need to clone and run that script?
+> - Write a shell script...
+    * won't work on Windows
+    * requires command line knowledge
+> - Write a Python script...
+    * most statisticians don't know Python
+    * ...I'm kind of an R guy at this point...
+
+## My solution
+
+* A CRAN package that provides a framework for ETL
+    * [`etl`](http://www.github.com/beanumber/etl) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/etl.svg?branch=master)](https://travis-ci.org/beanumber/etl)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/etl)](https://cran.r-project.org/package=etl)
+* An ecosystem of dependent packages for other data sources
+    * [`macleish`](http://www.github.com/beanumber/macleish) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/macleish.svg?branch=master)](https://travis-ci.org/beanumber/macleish)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/macleish)](https://cran.r-project.org/package=macleish)
+    * [`airlines`](http://www.github.com/beanumber/airlines) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/airlines.svg?branch=master)](https://travis-ci.org/beanumber/airlines)
+    * [`imdb`](http://www.github.com/beanumber/imdb)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/imdb.svg?branch=master)](https://travis-ci.org/beanumber/imdb)
+    * [`nyc311`](http://www.github.com/beanumber/nyc311)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/nyc311.svg?branch=master)](https://travis-ci.org/beanumber/nyc311)
+    * [`fec`](http://www.github.com/beanumber/fec)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/fec.svg?branch=master)](https://travis-ci.org/beanumber/fec)
+    * [`citibike`](http://www.github.com/beanumber/citibike)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/citibike.svg?branch=master)](https://travis-ci.org/beanumber/citibike)
+    * roll your own!
+    
+## Example: `mtcars`
+
+```{r, message=FALSE}
+library(etl)
+cars <- etl("mtcars") %>%
+  etl_create()
+cars %>%
+  tbl("mtcars") %>%
+  group_by(cyl) %>%
+  summarize(N = n(), mean_mpg = mean(mpg))
+```
+
+## An `etl` object **is** 
+
+* a `dplyr::src_sql` object
+    * provides a connection to a SQL database
+    * local or remote
+    * SQLite by default (`tempfile`)
+    * MySQL and PostgreSQL also supported
+    * uses `DBI::dbWriteTable` methods
+
+
+```{r}
+class(cars)
+```
+
+## An `etl` object **has** 
+
+* a place to store files
+    * local storage for raw and processed data
+    * `tempdir` by default
+
+
+```{r}
+summary(cars)
+```
+
+    
+## MacLeish
+
+```{r}
+library(macleish)
+macleish <- etl("macleish", dir = "~/dumps/macleish")
+```
+```{r, eval=FALSE}
+macleish %>%
+  etl_create()
+```
+```{r}
+summary(macleish)
+```
+    
+## Chaining operations
+
+```{r}
+getS3method("etl_create", "default")
+getS3method("etl_update", "default")
+```
+
+## Airlines
+
+```{r, eval=FALSE}
+library(airlines)
+
+ontime <- etl("airlines", dir = "~/dumps/airlines") 
+
+ontime %>%
+  etl_extract(years = 1987:2016) %>%
+  etl_transform(years = 1990:1999) %>%
+  etl_load(years = 1996:1997, months = c(1:6, 9))
+
+ontime %>%
+  tbl("flights") %>%
+  filter(year == 1996, 
+         dest = "SJC")
+```
+
+## Roll your own!
+
+* Vignette coming soon
+* Write three methods:
+    * `etl_extract.etl_pkgname()`
+    * `etl_transform.etl_pkgname()`
+    * `etl_load.etl_pkgname()`
+* Document, push, etc.
+
+## Template: `etl_extract`
+
+```{r, eval=FALSE}
+etl_extract.etl_pkgname <- function(obj, ...) {
+  raw_dir <- attr(obj, "raw_dir")
+  
+  # write code to download files to raw_dir
+  # use params in ... to fetch the appropriate files
+  
+  invisible(obj)
+}
+```
+
+
+## Template: `etl_transform`
+
+```{r, eval=FALSE}
+etl_transform.etl_pkgname <- function(obj, ...) {
+  raw_dir <- attr(obj, "raw_dir")
+  # use params in ... to fetch the appropriate files
+  # read the data in
+  raw_data <- readr::read_csv()
+  
+  # write code to transform, clean, etc.
+  
+  load_dir <- attr(obj, "load_dir")
+  # write a CSV to load_dir
+  readr::write_csv()
+  
+  invisible(obj)
+}
+```
+
+
+## Template: `etl_load`
+
+```{r, eval=FALSE}
+etl_load.etl_pkgname <- function(obj, ...) {
+  load_dir <- attr(obj, "load_dir")
+  # use params in ... to fetch the appropriate files
+  
+  # load the CSV(s) into SQL
+  DBI::dbWriteTable(obj$con, "mytable", path_to_csv)
+  
+  invisible(obj)
+}
+```
+
+## Using MySQL (setup)
+
+* Create an empty database in MySQL
+
+```{r, warning=FALSE}
+system("mysql -e 'CREATE DATABASE IF NOT EXISTS mtcars;'")
+```
+
+* Connect to MySQL
+```{r}
+db <- src_mysql(default.file = "~/.my.cnf", dbname = "mtcars", 
+                user = NULL, password = NULL, groups = "client")
+```
+
+## Using MySQL (populate)
+
+```{r}
+cars_mysql <- etl("mtcars", db = db) %>% 
+  etl_create()
+```
+
+## Using MySQL (play)
+
+```{r, warning=FALSE}
+cars_mysql %>%
+  tbl("mtcars") %>%
+  head()
+```
+
+## Other Features
+
+* `etl_update` chains ETL operations
+* `etl_cleanup` deletes files
+* `smart_download` only downloads files that don't already exist
+* helper functions for matching dates in filenames
+* Hard-coded SQL schema scripts
+    * Optimize with keys, indexes, partitions, etc.
+
+## The Future
+
+* Write more `etl` packages
+* Performance enhancements:
+    * <strike>Use `:memory:` instead of disk for SQLite?</strike>
+    * Use `feather` for intermediate files?
+    * Parallelize?
+    * prefer `dbWriteTable` methods that read CSVs
+    * avoid disk access
+
+### Thanks to the [`dplyr`](http://www.github.com/hadley/dplyr) and [`rstats-db`](http://www.github.com/rstats-db) developers!!
+
+<img alt="beanumber" src="http://www.fancyicons.com/free-icons/222/simple/png/128/github_128.png" height="64px"> [beanumber](http://www.github.com/beanumber)
+&nbsp; &nbsp;
+<img alt="BaumerBen" src="https://cdn1.iconfinder.com/data/icons/logotypes/32/twitter-128.png" height="64px"> @[BaumerBen](https://twitter.com/BaumerBen)

@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage{alltt}%
+\usepackage{hyperref}
+\usepackage{makeidx,epsfig}
+\usepackage{setspace,graphicx,subfig}
+\usepackage{xspace,xcolor,soul}
+\usepackage[round]{natbib}
+
+% define macros
+\newcommand{\ben}[1]{\sethlcolor{green}\hl{[BB]: #1}}
+\newcommand{\pkg}[1]{\hlkwb{\texttt{#1}}}
+\newcommand{\R}{\textsf{R}\xspace}
+
+
+\title{ETL for Medium data}
+\author{}
+
+\begin{document}
+
+\begin{abstract}
+Packages provide users with software that extends the core functionality of \R, as well as data that illustrates the use of that functionality. However, by design the type of data that can be contained in an \R package on CRAN is limited. First, packages are designed to be small, so that the amount of data stored in a package is supposed to be less than 5 megabytes. Furthermore, these data are static, in that CRAN allows only monthly releases. Alternative package repositories---such as GitHub---are also limited in their ability to store and deliver data that could be changing in real-time to \R users. The \pkg{etl} package provides a CRAN-friendly framework that allows R users to work with medium data in a responsible and responsive manner. It leverages the \pkg{dplyr} package to facilitate Extract-Load-Transfer (ETL) operations that bring real-time data into local or remote databases controllable by R users who may have little or no SQL experience. The suite of \pkg{etl}-dependent packages brings the world of medium data---too big to store in memory, but not so big that it won't fit on a hard drive---to a much wider audience. 
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+This paper describes the \pkg{etl} package for \R~\cite{etl}.
+
+\subsection{Motivation}
+
+reproducibility
+
+CRAN limits
+
+portability
+
+\subsection{Related Work}
+
+\cite{wickham2014tidy}
+
+\cite{dplyr,ggplot2,horton2015setting,DBI,nycflights13}
+
+\section{Medium data}
+
+\section{ETL}
+
+\section{ETL ecosystem}
+
+\section{Conclusion}
+
+\bibliographystyle{abbrvnat}
+\bibliography{refs}
+
+\end{document}
