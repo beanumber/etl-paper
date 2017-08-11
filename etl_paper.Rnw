@@ -10,45 +10,410 @@
 % define macros
 \newcommand{\ben}[1]{\sethlcolor{green}\hl{[BB]: #1}}
 \newcommand{\pkg}[1]{\hlkwb{\texttt{#1}}}
+\newcommand{\argument}[1]{\hlkwc{\texttt{#1}}}
+\newcommand{\func}[1]{\hlkwd{\texttt{#1}()}}
+\newcommand{\var}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\val}[1]{\hlnum{\texttt{#1}}}
+\newcommand{\data}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\cmd}[1]{\hlkwa{\texttt{#1}}}
+\newcommand{\obj}[1]{\hlstd{\texttt{#1}}}
 \newcommand{\R}{\textsf{R}\xspace}
 
 
-\title{ETL for Medium data}
+\title{Facilitating Reproducible Research on Medium Data}
 \author{}
 
 \begin{document}
 
 \begin{abstract}
-Packages provide users with software that extends the core functionality of \R, as well as data that illustrates the use of that functionality. However, by design the type of data that can be contained in an \R package on CRAN is limited. First, packages are designed to be small, so that the amount of data stored in a package is supposed to be less than 5 megabytes. Furthermore, these data are static, in that CRAN allows only monthly releases. Alternative package repositories---such as GitHub---are also limited in their ability to store and deliver data that could be changing in real-time to \R users. The \pkg{etl} package provides a CRAN-friendly framework that allows R users to work with medium data in a responsible and responsive manner. It leverages the \pkg{dplyr} package to facilitate Extract-Load-Transfer (ETL) operations that bring real-time data into local or remote databases controllable by R users who may have little or no SQL experience. The suite of \pkg{etl}-dependent packages brings the world of medium data---too big to store in memory, but not so big that it won't fit on a hard drive---to a much wider audience. 
+Many interesting data sets available on the Internet are of a \emph{medium} size---too big to fit into a personal computer's memory, but not so large that they won't fit comfortably on its hard disk. These data will inform vital research in all application domains, but they are cumbersome to work with and difficult to share in a reproducible fashion, due to a variety of constraints. These challenges impede thorough peer-review and scientific discourse. We propose a predictable and pipeable framework for \R (the state-of-the-art statistical computing environment) that leverages SQL (the venerable database architecture and query language) to make reproducible research on medium data a painless reality.  
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 
-This paper describes the \pkg{etl} package for \R~\cite{etl}.
+Scientific research is increasingly driven by ``large" data sets. However, the definition of ``large" is relative. We define \emph{medium} data to be those who are too big to store in memory on a personal computer, but not so big that they won't fit on a hard drive. Typically, this means data on the order of several gigabytes. Publicly accessible medium data sets (PAMDaS) are now available in a variety of application domains. To name a few, medium data are available for the Citi Bike bike-sharing program in New York City, campaign contributions from the Federal Election Commission, and on-time airline records from the Bureau of Transportation Services. 
 
-\subsection{Motivation}
+PAMDaS provide \emph{access} to these data, but this is not the only barrier to reproducible research that uses these data. Because of their size, reading these data into memory will either take an unbrearably long time, exhaust the computer's memory until it grinds to a halt, or not simply not work at all. The most sensible solution is to download the data to a local storage device, and then import it into a relational database management system (RDBMS). RDBMS's have been around since the 1970s, and still provide a scalable solution for data of this magnitude. Thankfully, open source implementations (e.g., MySQL, PostgreSQL, SQLite) are ubitiquitous. However, the process of creating a new database from scratch is time-consuming and requires knowledge of database administration. 
 
-reproducibility
+The process of downloading the raw data from its authoritative source and importing it into a RDBMS is called \emph{Extract-Transform-Load} (ETL). Professionals who work with data spend a disproportionate amount of their time on such tasks. Their solutions tend to be idiosyncratic, platform- or architecture-specific, poorly documented, unshared, and involve custom written scripts in various (and often multiple) languages. Thus, the ETL process provides a barrier to reproducible research, because there is not a good way of verifying that two people downloading data from the same source will end up with the same exact set of data in their local data store. This matters because any subsequent data analysis could be sensitive to small perturbations in the underlying data set. 
 
-CRAN limits
+Sharing the local data store is often also problematic, due to licensing restrictions and the sheer size of the data. While PAMDaS may be free to download, there may be legal barriers to publicly sharing a local data store that is essentially a reproduction of that original data. Moreover, sharing medium data sets through the cloud is expensive or unrealistic for many individuals and small companies. 
 
-portability
+We propose a hub-and-spoke software framework for making PAMDaS reproducible. Our solution consists of a package for \R that provides a framework for ETL operations (i.e., the \emph{hub}) along with a series of packages for \R that extend the ETL framework for a specific PAMDaS (i.e., a \emph{spoke}). The hub is provided by the \pkg{etl} package, which is available on CRAN~\citep{etl}. Six different spokes are in various states of development, but in principle there is no limit to how many spokes could be created. These packages are all fully open source (hosted on GitHub with Creative Commons licenses) and cross-platform (to the extent allowed by \R, MySQL, PostgreSQL, SQLite, etc.).
 
-\subsection{Related Work}
+The \pkg{etl} suite of packages will bring PAMDaS to data analysts of all stripes while lowering barriers to entry and enhancing transparency, usability, and reproducibility. For the most part, knowledge of SQL will not be required to access these data through \R. 
 
-\cite{wickham2014tidy}
 
-\cite{dplyr,ggplot2,horton2015setting,DBI,nycflights13}
+\section{Related Work}
 
-\section{Medium data}
+In this section we summarize the major considerations that make the \pkg{etl} package a progressive step towards reproducible research on medium data for \R users.
 
-\section{ETL}
+
+\subsection{Reproducible research}
+
+The notion of literate programming that began with~\cite{knuth1984literate}, combined with the interpretation of reproducible research outlined by~\cite{buckheit1995wavelab}, and fueled by the replicability crisis identified by~\cite{ioannidis2005most} informs the current challenges we face in conducting reproducible research on PAMDaS. Moreover, they suggest a path forward. Namely, data-based research must be backed by open data, with well-documented data analysis code that is shared publicly and executable on open-source platforms. 
+
+In academia, a diverse set of fields including computer science~\citep{donoho2009reproducible}, economics~\citep{tier2012}, archeology~\citep{marwick2017computational} and neuroscience~\citep{eglen2017toward} are actively debating how they will recognize reproducible research. Organizations like Project TIER and the Open Science Framework provide frameworks for conducting reproducible research, while statistics and data science educators instill reproducible practices in their students~\citep{baumer2014r}. Top-tier journals like the \textit{Journal of the American Statistical Association} have appointed a special editor for reproducibility~\citep{amstat2016jasa}. 
+
+Thus, while the need for research in all fields to be reproducible is clear, the specifications for what qualifies as reproducible is less clear, and the path towards achieving reproducibility is murkier still. 
+
+\subsection{Medium data}
+
+In the past few years, \emph{big data} has become an omnipresent buzzword that taps into our collective fascination with things that are massive. However, while a few enormous companies (e.g. Google, Facebook, Amazon, Walmart, etc.) generate and analyze truly big data (on the order of \emph{exabytes}, which are equal to 1000 \emph{petabtyes}, which are equal to 1000 \emph{terabytes}), most people who analyze data will never interact meaningfully with data of that size. 
+
+Most people will only encounter data that is \emph{small} (a few \emph{gigabtyes} at most). These data fit effortlessly into a computer's random access memory (RAM), and thus the user experiences no challenges related to the data's size. Because a computer can access data in memory at lightning-fast speeds, efficient data analysis algorithms like searching ($O(n)$), sorting ($O(n \log{n})$), and multiplying matrices (e.g. fitting a regression model) ($O(n^{2.376})$~\citep{williams2012multiplying}) will run nearly instantly---even on a laptop. Thus, for people working with small data, fundamental computer science concepts like the distinction between hardware and software, algorithmic efficiency, and bus speeds are immaterial. 
+
+\begin{table}
+  \centering
+  \begin{tabular}{cccc}
+``Size" & actual size & hardware & software \\
+\hline
+small  & $<$ several GB & RAM & \R \\ 
+medium & several GB -- a few TB & hard disk & SQL \\
+big    & many TB or more & computing cluster & Spark? \\
+\hline
+  \end{tabular}
+  \caption{Relative sizes of data from the point-of-view of personal computer users. We focus on medium data, which are too large to fit comfortably into the random access memory (RAM) of a typical personal computer, but not so large that they won't fit comfortably on the hard drive of such a computer. \label{tab:data}}
+\end{table}
+
+For the vast majority of us who are unlikely to ever interact meaningfully with truly big data, \emph{medium data} is both a viable solution and an accessible introduction to the challenges of big data~\citep{horton2015setting}. In Table~\ref{tab:data}, we constrast the relative sizes of data from the point of view of a personal computer user. Medium data is on the order of several gigabytes to a few terabytes. These data are large enough that they will not comfortably fit in memory on a personal computer without consequences, making a memory-only application like \R a dubious candidate for data analysis. However, medium data are not so large they won't fit on a single hard disk, making them accessible to a single user who is not have access to a computing cluster. An SQL-based RDBMS remains an appropriate storage and retrieval venue for medium data.  
+
+
+\subsection{The status quo}
+
+The fundamental challenge of big data is scalability, but medium data comes with its own challenges. 
+
+First, everything takes a little longer, since the aforementioned algorithms are no longer instantaneous. A single line of code might take one minute to execute instead of a millisecond, but these brief delays compound. 
+
+Second, a data analyst has to know something about SQL administration in order to set up a database. While these skills are not difficult to acquire, they are not part of the traditional curriculum in either statistics or computer science. Even data science courses that teach SQL usually focus on writing \cmd{SELECT} queries to retrive data from an existing database---not on writing table schemas and defining keys and indexes~\cite{hardin2015data}. 
+
+Third, getting PAMDaS set up involves often laborious ETL operations. Downloading medium data is not instantaneous and is dependent on the speed of one's Internet connection. Wrangling medium data is notoriously time-consuming work: reasonable estimates suggest this may occupy as much as 50--80\% of a data scientist's time. 
+
+For these reasons, a responsible data scientist will record their ETL operations in a script. But these scripts are often problematic, ad hoc solutions. Some common problems:
+\begin{description}
+  \item[Portability] Shell scripts may not port across operation systems. While Apple's OS X operating system is POSIX-compliant, not all flavors of GNU/Linux are. Microsoft Windows is not at all compliant and thus any such scripts are not likely to run on Windows without careful modification. 
+  \item[Usability] Under time pressure, data scientists are likely to write scripts that work for them, and not necessarily for other people. Their scripts are likely to be idiosyncratic and difficult for another person to use or modify. 
+  \item[Version Control] Even if a data scientist uses a formal version control system like \cmd{git} and GitHub, a script that ran when it was written may not run at all points in the future. 
+  \item[Languages] ETL scripts may be written in \cmd{bash}, Python, \R, SQL, Perl, PHP, or any combination of these and others. There may be good reasons for mixing different languages but the probability of portability must decrease with each additional language. 
+\end{description}
+
+The recommended solution for bundling ETL scripts for \R users is to write an \R package~\cite{wickham2015r}. Packages provide users with software that extends the core functionality of \R, as well as data that illustrates the use of that functionality. \R packages hosted on CRAN---the authoritative central repository---are checked extensively for quality and documentation, ensuring their \emph{usability}. Since \R is cross-platform, these packages are \emph{portable}. CRAN itself maintains distinct \emph{versioning}, and while \R package are mostly written in \R, there are a number of ways in which code from other \emph{languages} can be embedded into an \R package (e.g. \pkg{Rcpp} provides functionality to bundle \cmd{C++} code~\cite{Rcpp}). 
+
+However, by design the types of data that can be contained in an \R package hosted on the  (CRAN) are limited. First, packages are designed to be small, so that the amount of data stored in a package is supposed to be less than 5 megabytes. Furthermore, these data are static, in that CRAN allows only monthly releases. Alternative package repositories---such as GitHub---are also limited in their ability to store and deliver data that could be changing in real-time to \R users. In Table~\ref{tab:flights} we contrast two different CRAN packages for on-time airline flight data~\citep{nycflights13, hflights}, with the \pkg{etl}-dependent package that allows the user to build their own database of flight data~\citep{airlines}. We note the change in scope that the \pkg{airlines} package allows: whereas the two existing data sets are restricted to small, static data from flights departing two Houston-area airports in 2011, or three New York City-area airports in 2013, respectively, the \pkg{airlines} package covers all flights since 1987 departing from more than 350 airports nationwide. 
+
+\begin{table}
+  \centering
+  \begin{tabular}{cccc}
+package       & timespan & airports & size \\
+\hline
+\pkg{hflights}    &  2011  & IAH, HOU  & 2.1 MB \\ 
+\pkg{nycflights13} & 2013 & LGA, JFK, EWR & 4.4 MB \\
+\pkg{airlines} & 1987--present & $\approx 350$ &  $\approx 5$ GB \\
+\hline
+  \end{tabular}
+  \caption{Alternative packaging of on-time flight data from the Bureau of Transportation Statistics. We note the that the full scope of flight data produced is only downloadable through the \pkg{airlines} package. \label{tab:flights}}
+\end{table}
+
+
+
+\subsection{Database functionality in \R}
+
+Recent advances in \R computing have made accessing databases through \R a relatively painless process. 
+
+In \R, a \cmd{data.frame} is a two-dimensional array of data that consists of rows and columns. It is logically analogous to a \emph{table} in SQL parlance, but with two crucial differences in implementation: first, a \cmd{data.frame} is always stored in memory, whereas a table is usually written to disk; second, a \cmd{data.frame} need not and cannot be indexed, whereas tables are often indexed. The \pkg{tibble} package in \R extends the \cmd{data.frame} to the more flexible \cmd{tbl} data structure~\cite{tibble}. The \pkg{dbplyr} package further extends the functionality of \cmd{tbl}'s to be backed by an local or remote database~\cite{dbplyr}. A common interface to such databases is provided by the \pkg{DBI} package~\cite{DBI}. Each RDBMS has its own \R package that implements the \pkg{DBI} programming interface. For example, the \pkg{RMySQL} package implements the \pkg{DBI} specification for MySQL~\cite{RMySQL}, while the \pkg{RSQLite} package implements the \pkg{DBI} specification for SQLite~\cite{RSQLite}. 
+Through this chain of interfaces, a \cmd{tbl\_mysql} appears to an \R user to be a familiar \cmd{data.frame}, but in fact, it is akin to a \cmd{VIEW} of the underlying MySQL table, and thus occupies virtually no space in \R's memory and can make use of SQL indexes. 
+
+This all provides a backdrop for the enormously popular data wrangling package \pkg{dplyr}~\cite{dplyr}, which re-imagines SQL \cmd{SELECT} syntax as a pipeable sequence of five or six data verbs. This enables \R users to perform SQL-style operations from within \R without having to learn SQL. Furthermore, if the \pkg{dbplyr} functionality is employed, \R users can offload the execution of these operations to more powerful RDBMS's. 
+However, \pkg{dplyr}'s SQL translation function is only designed to handle \cmd{SELECT} queries, and even then only the most common types of these. 
+
+
+\subsection{Tidyverse design}
+
+The \pkg{etl} package fits into a growing collection of \R packages known as the \pkg{tidyverse}~\cite{tidyverse}. These packages are designed for interoperability and emphasize functions that are \href{https://www.meetup.com/nyhackr/events/224749681/}{\emph{pure}}, \emph{predictable}, and \href{http://newyorktechjournal.com/2015/09/pure-predictable-pipeable-creating-fluent-interfaces-with-r/}{\emph{pipeable}}, as advocated by Hadley Wickham.
+
+\begin{description}
+  \item[Pure] The output of a function is entirely dependent on the input to the function. Pure functions make no changes to other objects in the environment.
+  \item[Predictable] Functions names, arguments, and behaviors are consistent, such that if you can learn how to use one function, you implicitly understand how to use others. 
+  \item[Pipeable] Functions return objects of the same type as their first argument, so that pipeable operations can be chained together to produce \emph{pipelines}.
+\end{description}
+
+Functions in the \pkg{etl} package are predictable and pipeable, but not pure. This is by design---while the predictability and pipeability make \pkg{etl} easy to use and compatible with the \pkg{tidyverse}, these functions also necessarily download files, store them locally, and interact with databases outside of \R. These changes to the computing environment are unavoidable given the nature of the task. 
+
+\subsection{Our contribution}
+
+
+Among educators, interest in exposing statistics students to larger and more complex data is growing. Recent guidelines about undergraduate majors in statistics~\citep{asa-guidelines} and data science~\citep{pcmi2016} endorsed by the American Statistical Association have emphasized the necessity of exposing students to such data. \cite{horton2015setting} advocate for discussing medium data as a ``precursor" to big data. However, all of the aforementioned challenges to working with medium data present barriers to statistics educators who may not have sufficient experience with SQL, but are quite comfortable with \R. 
+
+The \pkg{etl} package provides a CRAN-friendly framework that allows \R users to work with medium data in a responsible and responsive manner. It leverages the \pkg{dplyr} package to facilitate Extract-Load-Transfer (ETL) operations that bring real-time data into local or remote databases controllable by R users who may have little or no SQL experience. The suite of \pkg{etl}-dependent packages brings the world of medium data---too big to store in memory, but not so big that it won't fit on a hard drive---to a much wider audience. 
+
+
+\section{The \pkg{etl} package}
+
+The \pkg{etl} package is designed to be interactively. In what follows we illustrate a few simple use cases and outline some of the package features. 
+
+\subsection{A simple example}
+
+After installing the package, we must load it. 
+
+<<load, message=FALSE>>=
+library(etl)
+@
+
+The first step is to instantiate an \cmd{etl} object using the \func{etl} function. The canonical example is the \data{mtcars} data set, which is built into \R. Here we use the \func{etl\_create} function to perform the entire ETL cycle on an object named \obj{my\_cars}. During this process, a local SQLite database was created in a temporary directory, that database was initialized, the \data{mtcars} data was ``downloaded" (i.e. in this case, from memory), transformed, and finally uploaded to that same SQLite database. 
+
+<<simple>>=
+my_cars <- etl("mtcars") %>%
+  etl_create()
+@
+
+The object \obj{my\_cars} is both an \cmd{etl\_mtcars} object and a \cmd{src\_dbi} object---and can thus do anything that any other \cmd{src\_dbi} object can do. It also maintains a connection to the SQLite database, has two folders (e.g. \cmd{raw} and \cmd{load}) where it can store files, and knows about a table called \cmd{mtcars} that exists in the SQLite database. 
+
+<<>>=
+class(my_cars)
+summary(my_cars)
+my_cars
+@
+
+Since \obj{my\_cars} is a \pkg{DBI} data source, the data stored in the SQLite database can be accessed in the usual manner. Here, we compute the average fuel economy for these cars. Note that these computations are performed by SQLite. 
+
+<<>>=
+my_cars %>%
+  tbl("mtcars") %>%
+  group_by(cyl) %>%
+  summarize(N = n(), mean_mpg = mean(mpg))
+@
+
+The \obj{my\_cars} object itself occupies very little of \R's memory. 
+
+<<>>=
+print(object.size(my_cars), units = "Kb")
+@
+
+\subsection{A more complex example}
+
+More realistically, the \pkg{etl} package simply provides the foundation for \pkg{etl}-dependent packages that focus on specific data sets. In this example, we illustrate how the \pkg{airlines} package can be used to build a large database of flights. 
+
+In this example we will connect to a local MySQL database server. We first have to create an \cmd{airlines} database---this is the only operation that \emph{must} be done in MySQL and cannot be performed from within \R. Unlike SQLite, the MySQL server must be configured manually. We then use the \func{src\_mysql\_cnf} function provided by \pkg{etl} to create a database connection. 
+
+<<>>=
+system("mysql -e 'CREATE DATABASE IF NOT EXISTS airlines;'")
+db <- src_mysql_cnf("airlines", host = "127.0.0.1")
+@
+
+Next, we load the \pkg{airlines} package and instantiate an \obj{ontime} object. In this case, we specify the \argument{db} argument to be the connection to our MySQL database, and the \argument{dir} argument for local storage. Any files we download or transform will be stored in \argument{dir}. 
+
+<<>>=
+library(airlines)
+ontime <- etl("airlines", db = db, dir = "~/dumps/airlines") 
+@
+
+Finally, we perform our ETL operations. In this case, we first initialize the database, and then download data from 1987--2016. While the \func{etl\_transform} function takes the same arguments as \func{etl\_extract}, those arguments needn't take the same values. In this case we choose to transform only the data from the decade of the 1990s. Finally, we load data from 1996 and 1997 into the database, but only from the first half of the year, plus September. 
+
+<<eval=FALSE>>=
+ontime %>%
+  etl_init() %>%
+  etl_extract(years = 1987:2016) %>%
+  etl_transform(years = 1990:1999) %>%
+  etl_load(years = 1996:1997, months = c(1:6, 9))
+@
+
+Now, we can access the data from Bradley International Airport. 
+
+<<>>=
+ontime %>%
+  tbl("flights") %>%
+  filter(year == 1996, dest == "BDL")
+@
+
+\subsection{A grammar for ETL}
+
+\cite{wilkinson2006grammar} described a ``grammar of graphics" that was implemented in \R as \pkg{ggplot2}~\citep{ggplot2}. Similarly, \pkg{dplyr} provides a ``grammar of data manipulation."~\citep{dplyr} A grammar consists of verbs and nouns that can be combined in logical ways to intentional effect. The benefit is that once a user understands the grammar, they should be able to read and write longer sequences of code fluently. The use of the pipe operator provided by the \pkg{magrittr} package~\citep{magrittr} is crucial to allowing pipelines (i.e. ``sentences") to be composed from short sequences of commands (i.e. ``phrases").
+
+The design of \pkg{etl} is very much in this spirit, albeit far less ambitious. We present \pkg{etl} as a grammar for ETL operations. 
+
+\subsubsection{ETL nouns}
+
+At the center of any \pkg{etl} pipeline is an object that inherits from \cmd{etl}. Specifically, the \pkg{etl}-dependent package \pkg{foo} creates objects of class \cmd{etl\_foo}. By design, every \pkg{etl} object is also a \cmd{src\_dbi} object, and can thus take advantage functions that work on sucj objects. \func{print}, \func{summary}, and \func{is} methods for \cmd{etl} objects extend those provided by other packages. Here, we illustrate a few of these features. 
+
+<<>>=
+class(ontime)
+summary(ontime)
+print(ontime)
+src_tbls(ontime)
+@
+
+Moreover, like all \cmd{src\_dbi} objects, every \pkg{etl} object is stored as a list and maintains a \cmd{DBIConnection} to a database in \val{con}. Accessing this allows one to make use of the extensive functionality provided via \pkg{DBI}. 
+
+<<>>=
+str(ontime)
+DBI::dbGetInfo(ontime$con) %>% as.matrix()
+DBI::dbListTables(ontime$con)
+@
+
+The main difference between an \pkg{etl} object and a \cmd{src\_dbi} object is that an \pkg{etl} object has attributes that point towards \cmd{dir}---a directory where files can be safely read and written. If no \cmd{dir} argument is specified, a temporary folder is created and used. Within \cmd{dir}, two subfolders are automatically created: \cmd{raw} and \cmd{load}. Raw files downloaded via \func{etl\_extract} are placed in \cmd{raw}. \func{etl\_transform} reads those files and writes the resulting transformed files to \cmd{load}. Finally, the \func{etl\_load} function reads files from \cmd{load} and imports them into the database. 
+
+<<>>=
+args(etl)
+@
+
+\subsubsection{ETL verbs}
+
+The workhorses of \pkg{etl} are the three main verbs. Each takes an \pkg{etl} object as its first argument and return an \pkg{etl} object invisibly, enabling these functions to be piped. 
+
+\begin{itemize}
+  \item \func{etl\_extract}: download data from the Internet and places the raw files in the \cmd{raw} directory
+  \item \func{etl\_transform}: read files in the \cmd{raw} directory, perform any data wrangling operations necessary, and write CSV files to the \cmd{load} directory
+  \item \func{etl\_load}: import CSV files from the \cmd{load} directory into the database
+\end{itemize}
+
+Writing these three functions becomes each \pkg{etl}-dependent package maintainer's responsibility. 
+
+These three main verbs will be used in virtually every pipeline. Two additional verbs are used optionally: \func{etl\_init} and \func{etl\_cleanup}. The former initializes the database by either running a SQL initialization script or by simply deleting all of the tables in the existing database. That script can be bundled by the package maintainer or passed as a file path or character vector. It can also be written in generic SQL or in a flavor of SQL specific to a particular database engine. This enables \R users to make use of features that exist in one database implementation but not another (e.g. partitions in MySQL which are not available in SQLite). The latter function allows the user to delete files from either the \cmd{raw} or \cmd{load} directories using regular expression pattern matching. 
+
+Two additional verbs are provided by \pkg{etl}: \func{etl\_update} and \func{etl\_create}. The former simply chains the extract, transform, and load phases together, passing the same arguments to each, while the latter runs the full chain including initilization and cleanup. 
+
+<<>>=
+getS3method("etl_update", "default")
+getS3method("etl_create", "default")
+@
+
+\subsection{Additional functionality}
+
+The \pkg{etl} package contains a few other functions that are useful for ETL operations. Some of these may eventually be passed upstream to \pkg{DBI}. Briefly,
+
+\begin{itemize}
+  \item \func{dbRunScript}: execute a sequence of arbitrary SQL commands. This takes a full SQL script and passed the individual commands to \func{DBI::dbExecute}.
+  \item \func{dbWipe}: delete all of the tables in a database
+  \item \func{match\_files\_by\_year\_months}, \func{extract\_date\_from\_filename}, and \func{valid\_year\_month} assist with working with dates---specifically in conjunction with files that may encoded dates in their names
+  \item \func{smart\_download} and \func{smart\_upload}: only download and transform files that don't already exist
+  \item \func{src\_mysql\_cnf} use the \cmd{\textasciitilde/.my.cnf} configuration file to connect
+\end{itemize}
+
 
 \section{ETL ecosystem}
 
+
+In this section we list various \pkg{etl}-dependent packages for PAMDaS that are in various stages of development. We also use the \pkg{citibike} package to illustrate how the reproducibility of published research in the natural and social sciences might be improved through its use. 
+
+\subsection{PAMDaS accessible via \pkg{etl}}
+
+The following \pkg{etl}-dependent packages are available on GitHub:
+
+\begin{description}
+  \item[macleish] weather and spatial data from the MacLeish Field Station in Whately, MA~\citep{macleish}
+  \item[airlines] on-time flight data from the Bureau of Transportation Services for all domestic flights since October 1987~\citep{airlines}
+  \item[imdb] a mirror of the Internet Movie Database~\citep{imdb}
+  \item[nyc311] calls to New York City's non-emergency municipal services hotline~\citep{nyc311}
+  \item[fec] campaign finance contributions and spending from the Federal Election Commission~\citep{fec}
+  \item[citibike] trip data for New York City's municipal bike sharing service~\citep{citibike}
+\end{description}
+
+We note that these packages can be developed more rapidly using the \pkg{etl} framework than would otherwise have been possible. In some cases, these packages can be reduced to a few lines of \R code. 
+
+\subsection{An example using Citi Bike}
+
+The lack of reproducibility in published scientific research in the natural and social sciences is problematic. Here, we revisit a series of operations research efforts analyzing load balancing for stations in the Citi Bike municipal bike sharing system in New York City~\cite{o2015data,singhvi2015predicting,o2015smarter}. The data from this system has fueled several research efforts since its launch in July 2013. 
+
+The system's engineers face a problem balancing the load of bikes among stations. Since one cannot ensure that bikes rented from one station will be returned to that station, how can one ensure that there will always be enough bikes at a particular station to meet demand? 
+
+\cite{singhvi2015predicting} provided the following description of their data set:
+\begin{quotation}
+We obtained bike usage statistics for April, May, June and July 2014 from Citi Bike's website (\url{https://www.citibikenyc.com/system-data}). This dataset contains start station id, end station id, station latitude, station longitude and trip time for each bike trip. 332 bike stations have one or more originating bike trips. 253 of these are in Manhattan while 79 are in Brooklyn (left panel of Figure 1). We processed this raw data to get the number of bike trips between each station pair during morning rush hours.
+\end{quotation}
+
+This is a fairly specific description of the how the data were acquired, since it cites a URL, a specific date range, and the exact number of stations present. However, it is still insufficient information for someone else to verify that they were working with the same data set. 
+
+Using the \pkg{citibike} package, we can attempt to reproduce this data set by creating a connection to a database, initializing it, and then populating that database with a single command:
+
+<<eval=TRUE, message=FALSE>>=
+library(citibike)
+bikes <- etl("citibike", dir = "~/dumps/citibike/",
+             db = src_mysql_cnf("citibike", host = "127.0.0.1"))
+@
+
+<<eval=FALSE>>=
+bikes %>%
+  etl_update(years = 2014, months = 4:7)
+@
+
+Running the following pipeline reveals only 331 unique stations. 
+
+<<>>=
+trips <- bikes %>%
+  tbl("trips")
+trips %>%
+  group_by(Start_Station_ID) %>%
+  summarize(num_trips = n()) %>%
+  filter(num_trips >= 1) %>%
+  collect() %>%
+  nrow()
+@
+
+The discrepancy here is probably not significant, but how would we really know? 
+Behind the scenes, the authors certainly wrote code to download and process these data from the Citi Bike website. Indeed, they admit as much in the last sentence of the quotation above. Moreover, the figures in the paper were clearly produced in \R. Thus, this research provides a perfect instance where the use of the \pkg{citibike} package could have standardized the exact data set upon which their research is based. The inclusion of a few short lines of code would ensure that all parties are analyzing the same data set. 
+
+In~\cite{faghih2016incorporating}, the authors model bike demand using spatio-temporal data from the Citi Bike system. Their description of the data is less specific than that of~\cite{singhvi2015predicting}, however they include an appendix containing some summary statistics. There is still no clear way to verify the integrity of the data set. They write:
+\begin{quotation}
+We focused on the month of September, 2013; i.e. the peak month of the usage in 2013. Therefore, the final sample consists of 237,600 records (330 stations $\times$ 24 hours $\times$ 30 days).
+\end{quotation}
+
+Here again, a single call to \func{etl\_update} could have ensured that all users have the same data set:
+
+<<eval=FALSE>>=
+etl_update(bikes, year = 2013, months = 9)
+@
+
+The number of records reported is somewhat misleading, since many stations had no trips during some hours of some day. In fact, the following pipeline returns only $167,258$ records. Here, we use the \pkg{lubridate} package for assistance with dates, and the \func{dplyr::collect} function to bring the data into \R for summarization. Note, however, that the \func{filter} operation is actually performed by MySQL. 
+
+<<message=FALSE>>=
+library(lubridate)
+system.time(
+trips_sept <- trips %>%
+  filter(YEAR(Start_Time) == 2013) %>%
+  collect() %>%
+  group_by(Start_Station_ID, day(Start_Time), hour(Start_Time)) %>%
+  summarize(N = n(), 
+            num_stations = n_distinct(Start_Station_ID), 
+            num_days = n_distinct(yday(Start_Time)))
+)
+nrow(trips_sept)
+@
+
+Or, we can have SQL do all the work. Note that the capitalized functions here are MySQL functions---not \R functions. The latter method is much faster since it only has to transfer 167 thousand records instead of more than 1 million. The delay with the first method is noticeable enough to fuel a conversation about scalability. 
+
+<<>>=
+system.time(
+trips_sept <- trips %>%
+  filter(YEAR(Start_Time) == 2013) %>%
+  group_by(Start_Station_ID, DAY(Start_Time), HOUR(Start_Time)) %>%
+  summarize(N = n(), 
+            num_stations = COUNT(DISTINCT(Start_Station_ID)), 
+            num_days = COUNT(DISTINCT(DAYOFYEAR(Start_Time)))) %>%
+  collect()
+)
+nrow(trips_sept)
+@
+
+To be clear, no one is accusing these researchers of misconduct, nor do we have any reason to believe that their data is not what they say it is, or that they have done a particularly poor job of describing it. The problem is that the typical academic standard for reproducibility is simply too low. We aim to improve on this through our ETL framework. 
+
+
 \section{Conclusion}
+
+\subsection{Future Work}
+
+The \pkg{etl} package does not solve all problems for those working with medium data. There is considerable room for improving the performance of the \pkg{etl} package itself. First, some of the ETL operations should be parallelizable. In particular, \func{etl\_transform} is a good candidate, since it is always working locally. In many cases, the bottleneck for \func{etl\_extract} may be the user's Internet connection, while for \func{etl\_load}, the database engine may not support simultaneous imports to the same table. Second, reading and writing data files to the disk is time-consuming. It is possible that new file formats such as \pkg{feather} could reduce latency here~\citep{feather}. Third, the data ends up being stored on disk three times: once in its raw format (hopefully compressed), once as a CSV (uncompressed), and once in the database's native file format (should be optimized). One can of course use \func{etl\_cleanup} to delete either or both of the first two instances, but perhaps a more streamlined process is possible, at least in some cases. 
+
+The \pkg{etl} package fuels rapid development of these packages, even among novice \R developers. We know this because many of the \pkg{etl}-dependent packages reference above were partially developed by undergraduate students. A broad adoption of these \pkg{etl}-dependent packages and a larger installed user base would increase interest in the project and lead to a more robust infrastructure. We plan to continue this work in the future. 
+
+\subsection{Discussion}
+
+As data grow larger and larger, more and more people will need to develop the skills necessary to work with them. Yet there is limited room in the undergraduate curriculum for such training. Moreover, exposing students to truly big data requires expensive technical infrastructure, training, and support that will remain burdensome to many faculty members for the foreseeable future. A more realistic approach towards helping students develop their capacity to work with larger data sets is to focus on medium data (rather than big data). These data are still challenging and will still help students develop their understanding of scalability issues, while at the same time having a much lower barrier to entry for both students and faculty. 
+
+At the same time, producing reproducible research on medium data is more difficult than it is on small data---and many researchers already have a hard time with that. As medium and big data becomes more prevalent in published research, we must not abandon our emphasis on reproducibility. 
+
+We propose this \pkg{etl} package as a mechanism for facilitating reproducible research on medium data for \R users. This has the dual benefit of lower barriers to entry (minimal SQL required) for larger and more complex data sets, while simultaneously ensuring the reproducibility of any subsequent research. 
 
 \bibliographystyle{abbrvnat}
 \bibliography{refs}
