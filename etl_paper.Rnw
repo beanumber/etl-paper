@@ -215,6 +215,14 @@ In what follows we illustrate a few simple use cases and outline some of the pac
 
 After installing the package, we must load it. 
 
+<<eval=FALSE, include=FALSE>>=
+install.packages("devtools")
+library(devtools)
+install_github("beanumber/etl")
+install_github("beanumber/citibike")
+install_github("beanumber/airlines")
+@
+
 <<load, message=FALSE>>=
 library(etl)
 @
