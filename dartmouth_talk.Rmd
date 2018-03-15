@@ -1,7 +1,7 @@
 ---
 title: "ETL for Medium Data"
 author: "Ben Baumer"
-date: "March 16, 2018 <br> (http://bit.ly/2956MSc)"
+date: "March 16, 2018 <br> (http://bit.ly/2pgFSfJ)"
 output:
   rmdshower::shower_presentation:
     self_contained: false
@@ -40,7 +40,7 @@ section.grey h2 {
 
 <p class="white">
 Benjamin S. Baumer</br>
-http://bit.ly/2gHCI0C</br>
+http://bit.ly/2pgFSfJ</br>
 Dartmouth Biomedical Data Science</br>
 March 16th, 2018
 </p>
@@ -604,6 +604,7 @@ etl_load.etl_pkgname <- function(obj, ...) {
 
 - Thanks to the [`dplyr`](http://www.github.com/hadley/dplyr) and [`rstats-db`](http://www.github.com/rstats-db) developers!!
 - Read the paper (https://arxiv.org/abs/1708.07073)
+- Check out [these slides](http://bit.ly/2pgFSfJ)
 </br></br>
 
 <img alt="beanumber" src="http://www.freepngimg.com/download/github/1-2-github-free-png-image.png" height="64px"> [beanumber](http://www.github.com/beanumber)
