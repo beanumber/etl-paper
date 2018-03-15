@@ -1,0 +1,613 @@
+---
+title: "ETL for Medium Data"
+author: "Ben Baumer"
+date: "March 16, 2018 <br> (http://bit.ly/2956MSc)"
+output:
+  rmdshower::shower_presentation:
+    self_contained: false
+    katex: true
+    ratio: 4x3
+    lib_dir: rmdshower
+---
+
+
+
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.path = 'figures/')
+library(tidyverse)
+```
+
+
+## A Grammar for Reproducible and Painless Extract-Transform-Load Operations on Medium Data { .white .grey .fullpage .height }
+
+<style type="text/css">
+.storage {
+  float: left;
+  width: 270px;
+  padding: 10px;
+}
+
+section.grey h2 {
+  color: #585a5e;
+}
+</style>
+
+![](https://cdn-images-1.medium.com/max/1280/1*wLRaUmtskDynbqGklT8Lkw.jpeg){.cover}
+
+</br></br></br></br>
+
+<p class="white">
+Benjamin S. Baumer</br>
+http://bit.ly/2gHCI0C</br>
+Dartmouth Biomedical Data Science</br>
+March 16th, 2018
+</p>
+
+## Four distinct ideas
+
+1. A **Grammar** for 
+2. **Reproducible** and Painless 
+3. **Extract-Transform-Load** Operations 
+4. on **Medium** Data
+
+# Motivation
+
+## An example: Citi Bike
+
+<div class="double">
+![](https://d21xlh2maitm24.cloudfront.net/nyc/01unlock2.JPG?mtime=20160428123800){class="one-col-image"}
+
+- New York City's municipal bike sharing
+    - 12,000 bikes, 472 stations
+- Problems:
+    - [load balancing](https://en.wikipedia.org/wiki/Load_balancing_(computing))
+    - how to ensure enough bikes at each station?
+</div>
+
+## Citi Bike: the rules
+
+![](http://citibikemiami.com/images/citibikemiamihome.png){class="cover"}
+
+## Citi Bike: research
+
+- [*Data Analysis and optimization for (Citi)Bike sharing*](http://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/view/9698) [O'Mahony, Shmoys (2015)]
+- [*Predicting bike usage for New York City’s bike sharing system*](http://www.aaai.org/ocs/index.php/WS/AAAIW15/paper/view/10115) [Singhvi, et al. (2015)]
+- [*Smarter tools for (Citi) bike sharing*](https://ecommons.cornell.edu/bitstream/handle/1813/40922/edo22.pdf ?sequence=1) [O'Mahony (2015)]
+- [*Incorporating the impact of spatio-temporal interactions on bicycle sharing system demand: A case study of New York CitiBike system*](http://www.sciencedirect.com/science/article/pii/S0966692316303143) [Faghih-Imani, Eluru (2016)]
+
+## Citi Bike: data
+
+> We obtained bike usage statistics for **April, May, June and July 2014** from
+Citi Bike’s website (<b>https://www.citibikenyc.com/system-data</b>). This dataset
+contains start station id, end station id, station latitude, station longitude and
+trip time for each bike trip. **332 bike stations** have one or more originating bike
+trips. 253 of these are in Manhattan while 79 are in Brooklyn (left panel of
+Figure 1). We processed this raw data to get the number of bike trips between
+each station pair during morning rush hours. </br>--Singhvi, et al. (2015)
+
+> - Could you reproduce this analysis? 
+
+## Citi Bike: set up `citibike` database
+
+- Set up `bikes` object
+
+```{r citibike, eval=TRUE, message=FALSE}
+library(citibike)
+
+bikes <- etl("citibike", 
+             dir = "~/dumps/citibike/",
+             db = src_mysql_cnf("citibike"))
+```
+
+- Populate a database
+
+```{r, eval=FALSE}
+bikes %>%
+  etl_update(years = 2014, months = 4:7)
+```
+
+## Citi Bike: query database
+
+```{r}
+trips <- bikes %>%
+  tbl("trips")
+
+trips %>%
+  group_by(Start_Station_ID) %>%
+  summarize(num_trips = n()) %>%
+  filter(num_trips >= 1) %>%
+  arrange(desc(num_trips)) %>%
+  collect()
+```
+
+## Citi Bike: reproducibility?
+
+- **How confident** are you that we have a copy of the same data as these researchers?
+
+> - same number of stations...
+>     - same number of rows? 
+>     - rows contain the same information? 
+> - impossible to verify given the description
+
+## Citi Bike: another example
+
+> We focused on the month of **September, 2013**; i.e. the peak month of the
+usage in 2013. Therefore, the final sample consists of **237,600 records** (330
+stations × 24 hours × 30 days). </br>--Fagigh-Imani & Eluru (2016)
+
+```{r, eval=FALSE}
+bikes %>%
+  etl_update(year = 2013, months = 9)
+```
+
+> - Now how confident are you? 
+
+## Citi Bike: a discrepancy
+
+```{r}
+trips %>%
+  filter(YEAR(Start_Time) == 2013) %>%
+  group_by(Start_Station_ID, 
+           DAY(Start_Time), 
+           HOUR(Start_Time)) %>%
+  summarize(N = n(),
+            num_stations = COUNT(DISTINCT(Start_Station_ID)),
+            num_days = COUNT(DISTINCT(DAYOFYEAR(Start_Time)))) %>%
+  collect() %>%
+  nrow()
+```
+
+> - Many stations had no trips during certain hours of certain days
+> - Is that a problem?
+
+# Reproducibility
+
+## Replicability Crisis
+
+- [*Why Most Published Research Findings Are False*](http://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124) (Ioannidis, 2005)
+- [*Announcement: Reducing our irreproducibility*](https://www.nature.com/news/announcement-reducing-our-irreproducibility-1.12852) (Nature, 2013)
+- [ASA's Statement on p-Values](https://amstat.tandfonline.com/doi/abs/10.1080/00031305.2016.1154108#.WqqAuuZG2fY) (Wasserstein & Lazar, 2016)
+
+<div class="double">
+> - **replicability**: 
+>     - different people get the same results with *different* data
+>     - entails data collection
+
+> - **reproducibility**: 
+>     - same/different people get the same results with *same* data
+>     - entails data analysis
+</div>
+
+
+## Literate Programming
+
+<div class="double">
+![](https://upload.wikimedia.org/wikipedia/en/6/62/Literate_Programming_book_cover.jpg){class="one-col-image"}
+
+- [Don Knuth](https://en.wikipedia.org/wiki/Donald_Knuth) (1985)
+- code and natural language interspersed
+- we implement this in R Markdown
+</div>
+
+## Reproducible scholarship
+
+> An article about a computational result is **advertising**, not scholarship. The
+actual scholarship is the full software environment, **code and data**, that pro-
+duced the result. </br>--Claerbout, 1994
+
+## Reproducibility in other fields
+
+<div class="double">
+- computer science (Donoho et al., 2009)
+- economics ([Ball & Medeiros, 2012](http://dx.doi.org/10.1080/00220485.2012.659647))
+- archeology ([Marwick, 2017](https://osf.io/preprints/socarxiv/q4v73/download?format=pdf))
+- neuroscience ([Eglen et al., 2017](https://www.biorxiv.org/content/early/2017/02/28/045104))
+- psychology
+- medicine
+
+![](https://www.nature.com/polopoly_fs/7.36716.1469695923!/image/reproducibility-graphic-online1.jpeg_gen/derivatives/landscape_630/reproducibility-graphic-online1.jpeg){.one-col-image}
+</div>
+
+## Data science toolchain
+
+<div class="double">
+
+1 Version control
+
+<img src="http://femgineer.com/images/logos/github-logo.png" height="150px">
+
+<hr>
+
+2 Literate programming
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/2000px-Markdown-mark.svg.png" height="150px">
+
+3 Scriptability
+
+<img src="http://rprogramming.net/wp-content/uploads/2012/10/R-Programming.png" height="150px">
+
+<hr>
+
+4 All of the above
+
+<img src="https://www.rstudio.com/wp-content/uploads/2014/03/blue-250.png" height="150px">
+
+</div>
+
+
+# Medium data
+
+## Data size for a single user
+
+![](http://szlifestyle.com/sz/wp-content/uploads/2017/04/RAM-sticks.jpg){class="storage"}
+
+![](https://thumbs.dreamstime.com/b/hand-open-hard-disk-drive-13760890.jpg){class="storage"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/IBM_Blue_Gene_P_supercomputer.jpg/1200px-IBM_Blue_Gene_P_supercomputer.jpg){class="storage"}
+
+
+"Size" | size | hardware | software
+-------|------|----------|-----
+small  | < several GB | RAM | R
+medium | several GB -- a few TB | hard disk | SQL
+big    | many TB or more | cluster | Spark?
+
+
+## Many interesting data sets are **medium**-sized
+
+[Bureau of Transportation Statistics on-time flight data](http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=120&Link=0)
+
+R package     | timespan | airports | size
+--------------|----------|----------|------
+`hflights`    |  2011  | IAH, HOU  | 2.1 MB
+`nycflights13` | 2013 | LGA, JFK, EWR | 4.4 MB
+`airlines` | 1987--2017 | ~350 | ~7 GB
+
+> - sizes differ are [orders of magnitude](https://en.wikipedia.org/wiki/Orders_of_magnitude_(numbers))
+- [Which Flight Will Get You There Fastest?](https://projects.fivethirtyeight.com/flights/)
+- [The Best And Worst Airlines, Airports And Flights, Summer 2015 Update](https://fivethirtyeight.com/features/the-best-and-worst-airlines-airports-and-flights-summer-2015-update/)
+- [A Better Way To Find The Best Flights And Avoid The Worst Airports](https://fivethirtyeight.com/features/fastest-airlines-fastest-airports/)
+
+
+## Challenges of medium data - size
+
+* Everything takes a little longer...
+    * downloading
+    * wrangling
+    * querying
+* Takes up space on disk
+* Too big to work with in memory, but...
+
+> - ...many (most?) R users don't know SQL
+> - ...even if they know `SELECT`, they probably don't know `CREATE TABLE`
+
+# ETL
+
+## [ETL](http://en.wikipedia.org/wiki/ETL) operations
+
+![](https://qph.fs.quoracdn.net/main-qimg-484feda16c300e03e9f94b11556f376b){width="750px"}
+
+> * Extract -> download
+> * Transform -> wrangle
+> * Load -> into database (typically SQL)
+
+## Challenges of medium data - ETL
+
+<div class="double">
+> - [Repackaging problematic / illegal](http://www.nytimes.com/2008/06/03/sports/baseball/03fantasy.html?_r=0)
+    * licensing?
+    * data size
+    * live data streams
+
+![](https://media.giphy.com/media/eS1lKEnFu37eo/giphy.gif){.one-col-image}
+</div>
+
+# Grammar
+
+## Challenges of medium data - workflow
+
+So you want to write a **script**...
+
+<div class="double">
+- Portability
+    - shell scripts may not be cross-platform
+    - require command line knowledge
+- Version Control
+    - even with `git`, may not be robust
+- Languages
+    - best tool for job? 
+    - or too many tools in the toolbox?
+- Usability
+    - likely to have **idiosyncratic UI**
+</div>
+
+## A grammar?
+
+> In linguistics, **grammar** is the set of structural rules governing the composition of clauses, phrases, and words in any given natural language. </br>--[Wikipedia](https://en.wikipedia.org/wiki/Grammar)
+
+> - *The Grammar of Graphics* (Wilkinson, 2006)
+>     - `ggplot2` (Wickham, 2009)
+> - `dplyr`: a grammar of data manipulation (Wickham & Francois, 2016)
+
+
+## Big question
+
+> - How can we do [reproducible research](https://www.projecttier.org/) on medium data...
+>     - ...when we can't just re-post the data (legally or technically)?
+>     - ...when our scripts aren't cross-platform?
+>     - ...when we don't speak the same language?
+
+<!--
+
+## Potential solutions
+
+> - Write a CRAN package...
+    * static data limited to 5 MB!!
+> - Leave the package on GitHub...
+    * with `devtools::use_data_raw`
+    * users need to clone and run that script?
+
+-->
+
+# My solution
+
+## A grammar for ETL
+
+<div class="double">
+- nouns:
+    - objects that inherit from class `etl`
+- verbs:
+    - `etl_extract()`
+    - `etl_transform()`
+    - `etl_load()`
+- adverbs:
+    - arguments to "verb" functions
+- predictable, pipeable syntax
+
+<center>![](https://www.tidyverse.org/images/hex-tidyverse.png){width="200px"}</center>
+![tidyverse](https://lsru.github.io/tv_course/img/01_tidyverse_data_science.png){class="one-col-image"}
+</div>
+
+
+## ETL suite of packages
+
+* A CRAN package that provides a framework for ETL
+    * [`etl`](http://www.github.com/beanumber/etl) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/etl.svg?branch=master)](https://travis-ci.org/beanumber/etl)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/etl)](https://cran.r-project.org/package=etl)
+* An ecosystem of dependent packages for other data sources
+    * [`macleish`](http://www.github.com/beanumber/macleish) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/macleish.svg?branch=master)](https://travis-ci.org/beanumber/macleish)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/macleish)](https://cran.r-project.org/package=macleish)
+    * [`airlines`](http://www.github.com/beanumber/airlines) &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/airlines.svg?branch=master)](https://travis-ci.org/beanumber/airlines)
+    * [`imdb`](http://www.github.com/beanumber/imdb)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/imdb.svg?branch=master)](https://travis-ci.org/beanumber/imdb)
+    * [`nyctaxi`](http://www.github.com/beanumber/nyctaxi)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/nyctaxi.svg?branch=master)](https://travis-ci.org/beanumber/nyctaxi)
+    [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/nyctaxi)](https://cran.r-project.org/package=nyctaxi)
+    * [`nyc311`](http://www.github.com/beanumber/nyc311)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/nyc311.svg?branch=master)](https://travis-ci.org/beanumber/nyc311)
+    * [`fec`](http://www.github.com/beanumber/fec)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/fec.svg?branch=master)](https://travis-ci.org/beanumber/fec)
+    * [`citibike`](http://www.github.com/beanumber/citibike)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/citibike.svg?branch=master)](https://travis-ci.org/beanumber/citibike)
+    * roll your own!
+    
+## Example 1: `mtcars`
+
+```{r, message=FALSE, warning=FALSE}
+library(etl)
+
+cars <- etl("mtcars") %>%
+  etl_extract() %>%
+  etl_transform() %>%
+  etl_load()
+
+cars %>%
+  tbl("mtcars") %>%
+  group_by(cyl) %>%
+  summarize(N = n(), mean_mpg = mean(mpg))
+```
+
+## Example 2: `airlines`
+
+- Create an empty database in MySQL
+
+```{r, warning=FALSE, eval=FALSE}
+system("mysql -e 'CREATE DATABASE IF NOT EXISTS airlines;'")
+```
+
+- Set up the `etl` object
+
+```{r, eval=TRUE}
+library(airlines)
+
+src_db <- src_mysql_cnf("airlines", groups = "aws")
+
+ontime <- etl("airlines", db = src_db, dir = "~/dumps/airlines") 
+```
+
+## Example 2: `airlines` cont'd
+
+- Perform ETL operations
+
+```{r, eval=FALSE}
+ontime %>%
+  etl_extract(years = 1987:2017) %>%
+  etl_transform(years = 1990:1999) %>%
+  etl_load(years = 1996:1997, months = c(1:6, 9))
+```
+
+> - May take hours!
+
+
+## Example 2: `airlines` cont'd
+
+- Answer questions
+    - Which airline has the shortest average delay at BTV? 
+
+```{r, warning=FALSE}
+ontime %>%
+  tbl("flights") %>%
+  filter(year == 1996, dest == "BTV") %>%
+  group_by(carrier) %>%
+  summarize(num_flights = n(), 
+            avg_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  arrange(desc(avg_delay))
+```
+
+
+
+## Noun: an `etl` object **is** 
+
+* a `dplyr::src_sql` object
+    * provides a connection to a SQL database
+    * local or remote
+    * SQLite by default (`tempfile`)
+    * MySQL and PostgreSQL also supported
+    * uses `DBI::dbWriteTable` methods
+
+```{r}
+class(cars)
+```
+
+## Noun: an `etl` object **has** 
+
+* a place to store files
+    * local storage for raw and processed data
+    * `tempdir` by default
+
+```{r}
+summary(ontime)
+```
+
+<!--
+
+## MacLeish
+
+```{r}
+library(macleish)
+macleish <- etl("macleish", dir = "~/dumps/macleish")
+```
+```{r, eval=FALSE}
+macleish %>%
+  etl_create()
+```
+```{r}
+summary(macleish)
+```
+
+-->
+
+## Verbs: chaining operations
+
+```{r}
+getS3method("etl_update", "default")
+getS3method("etl_create", "default")
+```
+
+## Common use cases
+
+- Regular updates for updated data 
+    - daily dump of overwritten customer data 
+- Regular updates for new data 
+    - rotate web logs
+- Asynchronous updates 
+    - recover from network disruption or file corrpution
+- Reconfigure and reload 
+    - update database after software update
+- Porting a database 
+    - publish local database to remote server
+
+# Extend `etl`
+
+## Roll your own!
+
+<div class="double">
+* [Extending `etl`](https://github.com/beanumber/etl/blob/master/vignettes/extending_etl.Rmd) vignette 
+* `create_etl_package()`
+* Write (at least one of) 3 methods:
+    * `etl_extract.foo()`
+    * `etl_transform.foo()`
+    * `etl_load.foo()`
+* Document, push, etc.
+
+![](https://media.giphy.com/media/pEkXP4ykLnHFK/giphy.gif){.one-col-image}
+</br></br></br></br></br>
+</div>
+
+## Template: `etl_extract`
+
+```{r, eval=FALSE}
+etl_extract.etl_pkgname <- function(obj, ...) {
+  raw_dir <- attr(obj, "raw_dir")
+  
+  # write code to download files to raw_dir
+  # use params in ... to fetch the appropriate files
+  
+  invisible(obj)
+}
+```
+
+
+## Template: `etl_transform`
+
+```{r, eval=FALSE}
+etl_transform.etl_pkgname <- function(obj, ...) {
+  raw_dir <- attr(obj, "raw_dir")
+  # use params in ... to fetch the appropriate files
+  # read the data in
+  raw_data <- readr::read_csv()
+  
+  # write code to transform, clean, etc.
+  
+  load_dir <- attr(obj, "load_dir")
+  # write a CSV to load_dir
+  readr::write_csv()
+  
+  invisible(obj)
+}
+```
+
+
+## Template: `etl_load`
+
+```{r, eval=FALSE}
+etl_load.etl_pkgname <- function(obj, ...) {
+  load_dir <- attr(obj, "load_dir")
+  # use params in ... to fetch the appropriate files
+  
+  # load the CSV(s) into SQL
+  DBI::dbWriteTable(obj$con, "mytable", path_to_csv)
+  
+  invisible(obj)
+}
+```
+
+## Other Features
+
+* `etl_update()` chains ETL operations
+* `etl_cleanup()` deletes files
+* `smart_download()` only downloads files that don't already exist
+* helper functions for matching dates in filenames
+* Hard-coded SQL schema scripts
+    * Optimize with keys, indexes, partitions, etc.
+
+# Conclusion
+
+## The Future
+
+- Write more `etl` packages!
+* Performance enhancements:
+    * <strike>Use `:memory:` instead of disk for SQLite?</strike>
+    * Use `feather` for intermediate files?
+    * Parallelize?
+    * prefer `dbWriteTable()` methods that read CSVs
+    * avoid disk access
+
+## The End
+
+- Thanks to the [`dplyr`](http://www.github.com/hadley/dplyr) and [`rstats-db`](http://www.github.com/rstats-db) developers!!
+- Read the paper (https://arxiv.org/abs/1708.07073)
+</br></br>
+
+<img alt="beanumber" src="http://www.freepngimg.com/download/github/1-2-github-free-png-image.png" height="64px"> [beanumber](http://www.github.com/beanumber)
+&nbsp; &nbsp;
+<img alt="BaumerBen" src="https://cdn1.iconfinder.com/data/icons/logotypes/32/twitter-128.png" height="64px"> @[BaumerBen](https://twitter.com/BaumerBen)
+
+# Thank you!

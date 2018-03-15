@@ -1,0 +1,10 @@
+---
+title: "ETL for Medium Data"
+author: "Ben Baumer"
+date: "January 7, 2016"
+output: html_document
+---
+
+## Abstract
+
+Packages provide users with software that extends the core functionality of R, as well as data that illustrates the use of that functionality. However, by design the type of data that can be contained in an R package on CRAN is limited. First, packages are designed to be small, so that the amount of data stored in a package is supposed to be less than 5 megabytes. Furthermore, these data are static, in that CRAN allows only monthly releases. Alternative package repositories -- such as GitHub -- are also limited in their ability to store and deliver data that could be changing in real-time to R users. The **etl** package provides a CRAN-friendly framework that allows R users to work with medium data in a responsible and responsive manner. It leverages the `dplyr` package to facilitate Extract-Load-Transfer (ETL) operations that bring real-time data into local or remote databases controllable by R users who may have little or no SQL experience. The suite of `etl`-dependent packages brings the world of medium data -- too big to store in memory, but not so big that it won't fit on a hard drive -- to a much wider audience. 
