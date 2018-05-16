@@ -1,7 +1,7 @@
 ---
 title: "ETL for Medium Data"
 author: "Ben Baumer"
-date: "May 17, 2018 <br> (http://bit.ly/2pgFSfJ)"
+date: "May 17, 2018 <br> (https://bit.ly/2rGrW0p)"
 output:
   rmdshower::shower_presentation:
     self_contained: false
@@ -40,9 +40,9 @@ section.grey h2 {
 
 <p class="white">
 Benjamin S. Baumer</br>
-http://bit.ly/2pgFSfJ</br>
-Dartmouth Biomedical Data Science</br>
-March 16th, 2018
+https://bit.ly/2rGrW0p</br>
+Symposium on Statistics and Data Science</br>
+May 17th, 2018
 </p>
 
 ## Four distinct ideas
@@ -52,7 +52,20 @@ March 16th, 2018
 3. **Extract-Transform-Load** Operations 
 4. on **Medium** Data
 
+## Big question
+
+
+> - How can we do [reproducible research](https://www.projecttier.org/) on medium data...
+>     - ...when we can't just re-post the data (legally or technically)?
+>     - ...when our scripts aren't cross-platform?
+>     - ...when we don't speak the same language?
+>     - ...many (most?) R users don't know SQL
+>     - ...even if they know `SELECT`, they probably don't know `CREATE TABLE`
+
+
 # Motivation
+
+
 
 ## An example: Citi Bike
 
@@ -162,7 +175,7 @@ trips %>%
 > - Many stations had no trips during certain hours of certain days
 > - Is that a problem?
 
-# Reproducibility
+# Challenges
 
 ## Replicability Crisis
 
@@ -181,65 +194,13 @@ trips %>%
 </div>
 
 
-## Literate Programming
-
-<div class="double">
-![](https://upload.wikimedia.org/wikipedia/en/6/62/Literate_Programming_book_cover.jpg){class="one-col-image"}
-
-- [Don Knuth](https://en.wikipedia.org/wiki/Donald_Knuth) (1985)
-- code and natural language interspersed
-- we implement this in R Markdown
-</div>
-
 ## Reproducible scholarship
 
 > An article about a computational result is **advertising**, not scholarship. The
 actual scholarship is the full software environment, **code and data**, that pro-
 duced the result. </br>--Claerbout, 1994
 
-## Reproducibility in other fields
-
-<div class="double">
-- computer science (Donoho et al., 2009)
-- economics ([Ball & Medeiros, 2012](http://dx.doi.org/10.1080/00220485.2012.659647))
-- archeology ([Marwick, 2017](https://osf.io/preprints/socarxiv/q4v73/download?format=pdf))
-- neuroscience ([Eglen et al., 2017](https://www.biorxiv.org/content/early/2017/02/28/045104))
-- psychology
-- medicine
-
-![](https://www.nature.com/polopoly_fs/7.36716.1469695923!/image/reproducibility-graphic-online1.jpeg_gen/derivatives/landscape_630/reproducibility-graphic-online1.jpeg){.one-col-image}
-</div>
-
-## Data science toolchain
-
-<div class="double">
-
-1 Version control
-
-<img src="http://femgineer.com/images/logos/github-logo.png" height="150px">
-
-<hr>
-
-2 Literate programming
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/2000px-Markdown-mark.svg.png" height="150px">
-
-3 Scriptability
-
-<img src="http://rprogramming.net/wp-content/uploads/2012/10/R-Programming.png" height="150px">
-
-<hr>
-
-4 All of the above
-
-<img src="https://www.rstudio.com/wp-content/uploads/2014/03/blue-250.png" height="150px">
-
-</div>
-
-
-# Medium data
-
-## Data size for a single user
+## Medium data (for a single user)
 
 ![](http://szlifestyle.com/sz/wp-content/uploads/2017/04/RAM-sticks.jpg){class="storage"}
 
@@ -255,35 +216,6 @@ medium | several GB -- a few TB | hard disk | SQL
 big    | many TB or more | cluster | Spark?
 
 
-## Many interesting data sets are **medium**-sized
-
-[Bureau of Transportation Statistics on-time flight data](http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=120&Link=0)
-
-R package     | timespan | airports | size
---------------|----------|----------|------
-`hflights`    |  2011  | IAH, HOU  | 2.1 MB
-`nycflights13` | 2013 | LGA, JFK, EWR | 4.4 MB
-`airlines` | 1987--2017 | ~350 | ~7 GB
-
-> - sizes differ are [orders of magnitude](https://en.wikipedia.org/wiki/Orders_of_magnitude_(numbers))
-- [Which Flight Will Get You There Fastest?](https://projects.fivethirtyeight.com/flights/)
-- [The Best And Worst Airlines, Airports And Flights, Summer 2015 Update](https://fivethirtyeight.com/features/the-best-and-worst-airlines-airports-and-flights-summer-2015-update/)
-- [A Better Way To Find The Best Flights And Avoid The Worst Airports](https://fivethirtyeight.com/features/fastest-airlines-fastest-airports/)
-
-
-## Challenges of medium data - size
-
-* Everything takes a little longer...
-    * downloading
-    * wrangling
-    * querying
-* Takes up space on disk
-* Too big to work with in memory, but...
-
-> - ...many (most?) R users don't know SQL
-> - ...even if they know `SELECT`, they probably don't know `CREATE TABLE`
-
-# ETL
 
 ## [ETL](http://en.wikipedia.org/wiki/ETL) operations
 
@@ -293,36 +225,6 @@ R package     | timespan | airports | size
 > * Transform -> wrangle
 > * Load -> into database (typically SQL)
 
-## Challenges of medium data - ETL
-
-<div class="double">
-> - [Repackaging problematic / illegal](http://www.nytimes.com/2008/06/03/sports/baseball/03fantasy.html?_r=0)
-    * licensing?
-    * data size
-    * live data streams
-
-![](https://media.giphy.com/media/eS1lKEnFu37eo/giphy.gif){.one-col-image}
-</div>
-
-# Grammar
-
-## Challenges of medium data - workflow
-
-So you want to write a **script**...
-
-<div class="double">
-- Portability
-    - shell scripts may not be cross-platform
-    - require command line knowledge
-- Version Control
-    - even with `git`, may not be robust
-- Languages
-    - best tool for job? 
-    - or too many tools in the toolbox?
-- Usability
-    - likely to have **idiosyncratic UI**
-</div>
-
 ## A grammar?
 
 > In linguistics, **grammar** is the set of structural rules governing the composition of clauses, phrases, and words in any given natural language. </br>--[Wikipedia](https://en.wikipedia.org/wiki/Grammar)
@@ -330,14 +232,8 @@ So you want to write a **script**...
 > - *The Grammar of Graphics* (Wilkinson, 2006)
 >     - `ggplot2` (Wickham, 2009)
 > - `dplyr`: a grammar of data manipulation (Wickham & Francois, 2016)
-
-
-## Big question
-
-> - How can we do [reproducible research](https://www.projecttier.org/) on medium data...
->     - ...when we can't just re-post the data (legally or technically)?
->     - ...when our scripts aren't cross-platform?
->     - ...when we don't speak the same language?
+> - Covers many use cases with relatively few words
+> - Portability, version control, languages, usability
 
 <!--
 
@@ -501,22 +397,8 @@ getS3method("etl_update", "default")
 getS3method("etl_create", "default")
 ```
 
-## Common use cases
 
-- Regular updates for updated data 
-    - daily dump of overwritten customer data 
-- Regular updates for new data 
-    - rotate web logs
-- Asynchronous updates 
-    - recover from network disruption or file corrpution
-- Reconfigure and reload 
-    - update database after software update
-- Porting a database 
-    - publish local database to remote server
-
-# Extend `etl`
-
-## Roll your own!
+## Extending `etl`
 
 <div class="double">
 * [Extending `etl`](https://github.com/beanumber/etl/blob/master/vignettes/extending_etl.Rmd) vignette 
@@ -531,80 +413,13 @@ getS3method("etl_create", "default")
 </br></br></br></br></br>
 </div>
 
-## Template: `etl_extract`
-
-```{r, eval=FALSE}
-etl_extract.etl_pkgname <- function(obj, ...) {
-  raw_dir <- attr(obj, "raw_dir")
-  
-  # write code to download files to raw_dir
-  # use params in ... to fetch the appropriate files
-  
-  invisible(obj)
-}
-```
-
-
-## Template: `etl_transform`
-
-```{r, eval=FALSE}
-etl_transform.etl_pkgname <- function(obj, ...) {
-  raw_dir <- attr(obj, "raw_dir")
-  # use params in ... to fetch the appropriate files
-  # read the data in
-  raw_data <- readr::read_csv()
-  
-  # write code to transform, clean, etc.
-  
-  load_dir <- attr(obj, "load_dir")
-  # write a CSV to load_dir
-  readr::write_csv()
-  
-  invisible(obj)
-}
-```
-
-
-## Template: `etl_load`
-
-```{r, eval=FALSE}
-etl_load.etl_pkgname <- function(obj, ...) {
-  load_dir <- attr(obj, "load_dir")
-  # use params in ... to fetch the appropriate files
-  
-  # load the CSV(s) into SQL
-  DBI::dbWriteTable(obj$con, "mytable", path_to_csv)
-  
-  invisible(obj)
-}
-```
-
-## Other Features
-
-* `etl_update()` chains ETL operations
-* `etl_cleanup()` deletes files
-* `smart_download()` only downloads files that don't already exist
-* helper functions for matching dates in filenames
-* Hard-coded SQL schema scripts
-    * Optimize with keys, indexes, partitions, etc.
-
-# Conclusion
-
-## The Future
-
-- Write more `etl` packages!
-* Performance enhancements:
-    * <strike>Use `:memory:` instead of disk for SQLite?</strike>
-    * Use `feather` for intermediate files?
-    * Parallelize?
-    * prefer `dbWriteTable()` methods that read CSVs
-    * avoid disk access
 
 ## The End
 
 - Thanks to the [`dplyr`](http://www.github.com/hadley/dplyr) and [`rstats-db`](http://www.github.com/rstats-db) developers!!
 - Read the paper (https://arxiv.org/abs/1708.07073)
-- Check out [these slides](http://bit.ly/2pgFSfJ)
+    - Coming soon to *JCGS*
+- Check out [these slides](https://bit.ly/2rGrW0p)
 </br></br>
 
 <img alt="beanumber" src="http://www.freepngimg.com/download/github/1-2-github-free-png-image.png" height="64px"> [beanumber](http://www.github.com/beanumber)
