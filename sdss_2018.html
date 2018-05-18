@@ -81,11 +81,11 @@ section.grey h2 {
 <p><img src="https://cdn-images-1.medium.com/max/1280/1*wLRaUmtskDynbqGklT8Lkw.jpeg" class="cover" /></p>
 <p></br></br></br></br></p>
 <p class="white">
-Benjamin S. Baumer</br> <a href="http://bit.ly/2pgFSfJ" class="uri">http://bit.ly/2pgFSfJ</a></br> Dartmouth Biomedical Data Science</br> March 16th, 2018
+Benjamin S. Baumer</br> <a href="https://bit.ly/2rGrW0p" class="uri">https://bit.ly/2rGrW0p</a></br> Symposium on Statistics and Data Science</br> May 17th, 2018
 </p>
 </section>
-<section id="four-distinct-ideas" class="slide level2">
-<h2>Four distinct ideas</h2>
+<section id="four-distinct-ideaschallenges" class="slide level2">
+<h2>Four distinct ideas/challenges</h2>
 <ol type="1">
 <li>A <strong>Grammar</strong> for</li>
 <li><strong>Reproducible</strong> and Painless</li>
@@ -95,6 +95,9 @@ Benjamin S. Baumer</br> <a href="http://bit.ly/2pgFSfJ" class="uri">http://bit.l
 </section>
 <section id="motivation" class="titleslide slide level1"><h2 class="shout">Motivation</h2></section><section id="an-example-citi-bike" class="slide level2">
 <h2>An example: Citi Bike</h2>
+<p><img src="http://citibikemiami.com/images/citibikemiamihome.png" class="cover" /></p>
+</section><section id="citi-bike-problems" class="slide level2">
+<h2>Citi Bike: problems?</h2>
 <div class="double">
 <p><img src="https://d21xlh2maitm24.cloudfront.net/nyc/01unlock2.JPG?mtime=20160428123800" class="one-col-image" /></p>
 <ul>
@@ -109,9 +112,6 @@ Benjamin S. Baumer</br> <a href="http://bit.ly/2pgFSfJ" class="uri">http://bit.l
 </ul></li>
 </ul>
 </div>
-</section><section id="citi-bike-the-rules" class="slide level2">
-<h2>Citi Bike: the rules</h2>
-<p><img src="http://citibikemiami.com/images/citibikemiamihome.png" class="cover" /></p>
 </section><section id="citi-bike-research" class="slide level2">
 <h2>Citi Bike: research</h2>
 <ul>
@@ -154,20 +154,20 @@ trips <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">filter</span>(num_trips <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(num_trips)) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">collect</span>()</code></pre></div>
-<pre><code>## # A tibble: 811 x 2
+<pre><code>## # A tibble: 332 x 2
 ##    Start_Station_ID num_trips
 ##               &lt;int&gt;     &lt;dbl&gt;
-##  1              519   162716.
-##  2              497   112218.
-##  3              402   108590.
-##  4              435   107133.
-##  5              426   105610.
-##  6             3255    97083.
-##  7              490    94872.
-##  8              459    90718.
-##  9              514    86833.
-## 10              477    85082.
-## # ... with 801 more rows</code></pre>
+##  1              519     50316
+##  2              521     49511
+##  3              293     45391
+##  4              497     45154
+##  5              426     40046
+##  6              435     37542
+##  7              285     36074
+##  8              499     33849
+##  9              151     33776
+## 10              444     33663
+## # ... with 322 more rows</code></pre>
 </section><section id="citi-bike-reproducibility" class="slide level2">
 <h2>Citi Bike: reproducibility?</h2>
 <ul>
@@ -178,38 +178,52 @@ trips <span class="op">%&gt;%</span>
 <ul>
 <li class="fragment next">same number of rows?</li>
 <li class="fragment next">rows contain the same information?</li>
+<li class="fragment next">integer overflows?</li>
 </ul></li>
 <li class="fragment next">impossible to verify given the description</li>
 </ul>
-</section><section id="citi-bike-another-example" class="slide level2">
-<h2>Citi Bike: another example</h2>
-<blockquote>
-<p>We focused on the month of <strong>September, 2013</strong>; i.e. the peak month of the usage in 2013. Therefore, the final sample consists of <strong>237,600 records</strong> (330 stations × 24 hours × 30 days). </br>–Fagigh-Imani &amp; Eluru (2016)</p>
-</blockquote>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">bikes <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_update</span>(<span class="dt">year =</span> <span class="dv">2013</span>, <span class="dt">months =</span> <span class="dv">9</span>)</code></pre></div>
-<ul>
-<li class="fragment next">Now how confident are you?</li>
-</ul>
-</section><section id="citi-bike-a-discrepancy" class="slide level2">
-<h2>Citi Bike: a discrepancy</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trips <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(<span class="kw">YEAR</span>(Start_Time) <span class="op">==</span><span class="st"> </span><span class="dv">2013</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(Start_Station_ID, 
-           <span class="kw">DAY</span>(Start_Time), 
-           <span class="kw">HOUR</span>(Start_Time)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">N =</span> <span class="kw">n</span>(),
-            <span class="dt">num_stations =</span> <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span>(Start_Station_ID)),
-            <span class="dt">num_days =</span> <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span>(<span class="kw">DAYOFYEAR</span>(Start_Time)))) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">collect</span>() <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">nrow</span>()</code></pre></div>
-<pre><code>## [1] 0</code></pre>
-<ul>
-<li class="fragment next">Many stations had no trips during certain hours of certain days</li>
-<li class="fragment next">Is that a problem?</li>
-</ul>
+<!--
+
+## Citi Bike: another example
+
+> We focused on the month of **September, 2013**; i.e. the peak month of the
+usage in 2013. Therefore, the final sample consists of **237,600 records** (330
+stations × 24 hours × 30 days). </br>--Fagigh-Imani & Eluru (2016)
+
+
+```r
+bikes %>%
+  etl_update(year = 2013, months = 9)
+```
+
+> - Now how confident are you? 
+
+## Citi Bike: a discrepancy
+
+
+```r
+trips %>%
+  filter(YEAR(Start_Time) == 2013) %>%
+  group_by(Start_Station_ID, 
+           DAY(Start_Time), 
+           HOUR(Start_Time)) %>%
+  summarize(N = n(),
+            num_stations = COUNT(DISTINCT(Start_Station_ID)),
+            num_days = COUNT(DISTINCT(DAYOFYEAR(Start_Time)))) %>%
+  collect() %>%
+  nrow()
+```
+
+```
+## [1] 167258
+```
+
+> - Many stations had no trips during certain hours of certain days
+> - Is that a problem?
+
+-->
 </section>
-<section id="reproducibility" class="titleslide slide level1"><h2 class="shout">Reproducibility</h2></section><section id="replicability-crisis" class="slide level2">
+<section id="reproducibility" class="titleslide slide level1"><h2 class="shout">2. Reproducibility</h2></section><section id="replicability-crisis" class="slide level2">
 <h2>Replicability Crisis</h2>
 <ul>
 <li><a href="http://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124"><em>Why Most Published Research Findings Are False</em></a> (Ioannidis, 2005)</li>
@@ -232,52 +246,17 @@ trips <span class="op">%&gt;%</span>
 </ul></li>
 </ul>
 </div>
-</section><section id="literate-programming" class="slide level2">
-<h2>Literate Programming</h2>
-<div class="double">
-<p><img src="https://upload.wikimedia.org/wikipedia/en/6/62/Literate_Programming_book_cover.jpg" class="one-col-image" /></p>
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/Donald_Knuth">Don Knuth</a> (1985)</li>
-<li>code and natural language interspersed</li>
-<li>we implement this in R Markdown</li>
-</ul>
-</div>
 </section><section id="reproducible-scholarship" class="slide level2">
 <h2>Reproducible scholarship</h2>
 <blockquote>
 <p>An article about a computational result is <strong>advertising</strong>, not scholarship. The actual scholarship is the full software environment, <strong>code and data</strong>, that pro- duced the result. </br>–Claerbout, 1994</p>
 </blockquote>
-</section><section id="reproducibility-in-other-fields" class="slide level2">
-<h2>Reproducibility in other fields</h2>
-<div class="double">
 <ul>
-<li>computer science (Donoho et al., 2009)</li>
-<li>economics (<a href="http://dx.doi.org/10.1080/00220485.2012.659647">Ball &amp; Medeiros, 2012</a>)</li>
-<li>archeology (<a href="https://osf.io/preprints/socarxiv/q4v73/download?format=pdf">Marwick, 2017</a>)</li>
-<li>neuroscience (<a href="https://www.biorxiv.org/content/early/2017/02/28/045104">Eglen et al., 2017</a>)</li>
-<li>psychology</li>
-<li>medicine</li>
+<li class="fragment next">Must include the code you wrote to get the data!</li>
 </ul>
-<p><img src="https://www.nature.com/polopoly_fs/7.36716.1469695923!/image/reproducibility-graphic-online1.jpeg_gen/derivatives/landscape_630/reproducibility-graphic-online1.jpeg" class="one-col-image" /></p>
-</div>
-</section><section id="data-science-toolchain" class="slide level2">
-<h2>Data science toolchain</h2>
-<div class="double">
-
-<p>1 Version control</p>
-<p><img src="http://femgineer.com/images/logos/github-logo.png" height="150px"></p>
-<hr>
-<p>2 Literate programming</p>
-<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/2000px-Markdown-mark.svg.png" height="150px"></p>
-<p>3 Scriptability</p>
-<p><img src="http://rprogramming.net/wp-content/uploads/2012/10/R-Programming.png" height="150px"></p>
-<hr>
-<p>4 All of the above</p>
-<p><img src="https://www.rstudio.com/wp-content/uploads/2014/03/blue-250.png" height="150px"></p>
-</div>
 </section>
-<section id="medium-data" class="titleslide slide level1"><h2 class="shout">Medium data</h2></section><section id="data-size-for-a-single-user" class="slide level2">
-<h2>Data size for a single user</h2>
+<section id="medium-data" class="titleslide slide level1"><h2 class="shout">4. Medium data</h2></section><section id="data-size-for-the-single-user" class="slide level2">
+<h2>Data size for the single user</h2>
 <p><img src="http://szlifestyle.com/sz/wp-content/uploads/2017/04/RAM-sticks.jpg" class="storage" /></p>
 <p><img src="https://thumbs.dreamstime.com/b/hand-open-hard-disk-drive-13760890.jpg" class="storage" /></p>
 <p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/IBM_Blue_Gene_P_supercomputer.jpg/1200px-IBM_Blue_Gene_P_supercomputer.jpg" class="storage" /></p>
@@ -311,63 +290,8 @@ trips <span class="op">%&gt;%</span>
 </tr>
 </tbody>
 </table>
-</section><section id="many-interesting-data-sets-are-medium-sized" class="slide level2">
-<h2>Many interesting data sets are <strong>medium</strong>-sized</h2>
-<p><a href="http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=120&amp;Link=0">Bureau of Transportation Statistics on-time flight data</a></p>
-<table>
-<thead>
-<tr class="header">
-<th>R package</th>
-<th>timespan</th>
-<th>airports</th>
-<th>size</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>hflights</code></td>
-<td>2011</td>
-<td>IAH, HOU</td>
-<td>2.1 MB</td>
-</tr>
-<tr class="even">
-<td><code>nycflights13</code></td>
-<td>2013</td>
-<td>LGA, JFK, EWR</td>
-<td>4.4 MB</td>
-</tr>
-<tr class="odd">
-<td><code>airlines</code></td>
-<td>1987–2017</td>
-<td>~350</td>
-<td>~7 GB</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li class="fragment next">sizes differ are <a href="https://en.wikipedia.org/wiki/Orders_of_magnitude_(numbers)">orders of magnitude</a></li>
-<li class="fragment next"><a href="https://projects.fivethirtyeight.com/flights/">Which Flight Will Get You There Fastest?</a></li>
-<li class="fragment next"><a href="https://fivethirtyeight.com/features/the-best-and-worst-airlines-airports-and-flights-summer-2015-update/">The Best And Worst Airlines, Airports And Flights, Summer 2015 Update</a></li>
-<li class="fragment next"><a href="https://fivethirtyeight.com/features/fastest-airlines-fastest-airports/">A Better Way To Find The Best Flights And Avoid The Worst Airports</a></li>
-</ul>
-</section><section id="challenges-of-medium-data---size" class="slide level2">
-<h2>Challenges of medium data - size</h2>
-<ul>
-<li>Everything takes a little longer…
-<ul>
-<li>downloading</li>
-<li>wrangling</li>
-<li>querying</li>
-</ul></li>
-<li>Takes up space on disk</li>
-<li>Too big to work with in memory, but…</li>
-</ul>
-<ul>
-<li class="fragment next">…many (most?) R users don’t know SQL</li>
-<li class="fragment next">…even if they know <code>SELECT</code>, they probably don’t know <code>CREATE TABLE</code></li>
-</ul>
 </section>
-<section id="etl" class="titleslide slide level1"><h2 class="shout">ETL</h2></section><section id="etl-operations" class="slide level2">
+<section id="etl" class="titleslide slide level1"><h2 class="shout">3. ETL</h2></section><section id="etl-operations" class="slide level2">
 <h2><a href="http://en.wikipedia.org/wiki/ETL">ETL</a> operations</h2>
 <p><img src="https://qph.fs.quoracdn.net/main-qimg-484feda16c300e03e9f94b11556f376b" width="750" /></p>
 <ul>
@@ -375,44 +299,8 @@ trips <span class="op">%&gt;%</span>
 <li class="fragment next">Transform -&gt; wrangle</li>
 <li class="fragment next">Load -&gt; into database (typically SQL)</li>
 </ul>
-</section><section id="challenges-of-medium-data---etl" class="slide level2">
-<h2>Challenges of medium data - ETL</h2>
-<div class="double">
-<ul>
-<li class="fragment next"><a href="http://www.nytimes.com/2008/06/03/sports/baseball/03fantasy.html?_r=0">Repackaging problematic / illegal</a></li>
-<li class="fragment next">licensing?</li>
-<li class="fragment next">data size</li>
-<li class="fragment next">live data streams</li>
-</ul>
-<p><img src="https://media.giphy.com/media/eS1lKEnFu37eo/giphy.gif" class="one-col-image" /></p>
-</div>
 </section>
-<section id="grammar" class="titleslide slide level1"><h2 class="shout">Grammar</h2></section><section id="challenges-of-medium-data---workflow" class="slide level2">
-<h2>Challenges of medium data - workflow</h2>
-<p>So you want to write a <strong>script</strong>…</p>
-<div class="double">
-<ul>
-<li>Portability
-<ul>
-<li>shell scripts may not be cross-platform</li>
-<li>require command line knowledge</li>
-</ul></li>
-<li>Version Control
-<ul>
-<li>even with <code>git</code>, may not be robust</li>
-</ul></li>
-<li>Languages
-<ul>
-<li>best tool for job?</li>
-<li>or too many tools in the toolbox?</li>
-</ul></li>
-<li>Usability
-<ul>
-<li>likely to have <strong>idiosyncratic UI</strong></li>
-</ul></li>
-</ul>
-</div>
-</section><section id="a-grammar" class="slide level2">
+<section id="grammar" class="titleslide slide level1"><h2 class="shout">1. Grammar</h2></section><section id="a-grammar" class="slide level2">
 <h2>A grammar?</h2>
 <blockquote>
 <p>In linguistics, <strong>grammar</strong> is the set of structural rules governing the composition of clauses, phrases, and words in any given natural language. </br>–<a href="https://en.wikipedia.org/wiki/Grammar">Wikipedia</a></p>
@@ -423,16 +311,8 @@ trips <span class="op">%&gt;%</span>
 <li class="fragment next"><code>ggplot2</code> (Wickham, 2009)</li>
 </ul></li>
 <li class="fragment next"><code>dplyr</code>: a grammar of data manipulation (Wickham &amp; Francois, 2016)</li>
-</ul>
-</section><section id="big-question" class="slide level2">
-<h2>Big question</h2>
-<ul>
-<li class="fragment next">How can we do <a href="https://www.projecttier.org/">reproducible research</a> on medium data…
-<ul>
-<li class="fragment next">…when we can’t just re-post the data (legally or technically)?</li>
-<li class="fragment next">…when our scripts aren’t cross-platform?</li>
-<li class="fragment next">…when we don’t speak the same language?</li>
-</ul></li>
+<li class="fragment next">Covers many use cases with relatively few words</li>
+<li class="fragment next">Once you learn the grammar, you can speak freely</li>
 </ul>
 <!--
 
@@ -443,6 +323,21 @@ trips <span class="op">%&gt;%</span>
 > - Leave the package on GitHub...
     * with `devtools::use_data_raw`
     * users need to clone and run that script?
+
+-->
+<!--
+
+## Big question
+
+
+> - How can we do [reproducible research](https://www.projecttier.org/) on medium data...
+>     - ...when we can't just re-post the data (legally or technically)?
+>     - ...when our scripts aren't cross-platform?
+>     - ...when we don't speak the same language?
+>     - ...many (most?) R users don't know SQL
+>     - ...even if they know `SELECT`, they probably don't know `CREATE TABLE`
+> - Concerns
+>     - portability, version control, languages, usability
 
 -->
 </section>
@@ -504,7 +399,7 @@ cars <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">group_by</span>(cyl) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">N =</span> <span class="kw">n</span>(), <span class="dt">mean_mpg =</span> <span class="kw">mean</span>(mpg))</code></pre></div>
 <pre><code>## # Source:   lazy query [?? x 3]
-## # Database: sqlite 3.22.0 [/tmp/Rtmp8ekZLU/file4d67439c3f76.sqlite3]
+## # Database: sqlite 3.22.0 [/tmp/RtmpbDPxQD/file35077c24adb2.sqlite3]
 ##     cyl     N mean_mpg
 ##   &lt;int&gt; &lt;int&gt;    &lt;dbl&gt;
 ## 1     4    11     26.7
@@ -531,33 +426,40 @@ ontime &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ontime <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">etl_extract</span>(<span class="dt">years =</span> <span class="dv">1987</span><span class="op">:</span><span class="dv">2017</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_transform</span>(<span class="dt">years =</span> <span class="dv">1990</span><span class="op">:</span><span class="dv">1999</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_load</span>(<span class="dt">years =</span> <span class="dv">1996</span><span class="op">:</span><span class="dv">1997</span>, <span class="dt">months =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">6</span>, <span class="dv">9</span>))</code></pre></div>
+<span class="st">  </span><span class="kw">etl_transform</span>(<span class="dt">years =</span> <span class="dv">2001</span><span class="op">:</span><span class="dv">2010</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">etl_load</span>(<span class="dt">years =</span> <span class="dv">2009</span><span class="op">:</span><span class="dv">2010</span>, <span class="dt">months =</span> <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>, <span class="dv">5</span>))</code></pre></div>
 <ul>
 <li class="fragment next">May take hours!</li>
 </ul>
 </section><section id="example-2-airlines-contd-1" class="slide level2">
 <h2>Example 2: <code>airlines</code> cont’d</h2>
 <ul>
-<li>Answer questions
-<ul>
-<li>Which airline has the shortest average delay at BTV?</li>
-</ul></li>
+<li>Q: Which airline had the shortest average delay at IAD?</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ontime <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">tbl</span>(<span class="st">&quot;flights&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> </span><span class="dv">1996</span>, dest <span class="op">==</span><span class="st"> &quot;BTV&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> </span><span class="dv">2010</span>, dest <span class="op">==</span><span class="st"> &quot;IAD&quot;</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">group_by</span>(carrier) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">num_flights =</span> <span class="kw">n</span>(), 
+            <span class="dt">begin =</span> <span class="kw">min</span>(month), <span class="dt">end =</span> <span class="kw">max</span>(month), 
             <span class="dt">avg_delay =</span> <span class="kw">mean</span>(arr_delay, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(avg_delay))</code></pre></div>
-<pre><code>## # Source:     lazy query [?? x 3]
+<span class="st">  </span><span class="kw">arrange</span>(avg_delay)</code></pre></div>
+<pre><code>## # Source:     lazy query [?? x 5]
 ## # Database:   mysql 5.7.22-0ubuntu0.16.04.1 [bbaumer@127.0.0.1:/airlines]
-## # Ordered by: desc(avg_delay)
-##   carrier num_flights avg_delay
-##   &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
-## 1 UA             665.     11.2 
-## 2 US            1254.      9.22</code></pre>
+## # Ordered by: avg_delay
+##    carrier num_flights begin   end avg_delay
+##    &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt; &lt;int&gt;     &lt;dbl&gt;
+##  1 US               30     1     5    -7.27 
+##  2 UA             7800     1     5    -1.30 
+##  3 OO                6     1     1     0.667
+##  4 EV             1931     1     5     3.16 
+##  5 YV             4749     1     5     4.80 
+##  6 XE             3169     1     5     5.58 
+##  7 B6             1769     1     5     5.86 
+##  8 OH              273     1     5     6.17 
+##  9 WN             1190     1     5     7.13 
+## 10 DL              853     1     5     7.53 
+## # ... with more rows</code></pre>
 </section><section id="noun-an-etl-object-is" class="slide level2">
 <h2>Noun: an <code>etl</code> object <strong>is</strong></h2>
 <ul>
@@ -566,7 +468,7 @@ ontime &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st
 <li>provides a connection to a SQL database</li>
 <li>local or remote</li>
 <li>SQLite by default (<code>tempfile</code>)</li>
-<li>MySQL and PostgreSQL also supported</li>
+<li>Any <code>dbplyr</code> backend supported</li>
 <li>uses <code>DBI::dbWriteTable</code> methods</li>
 </ul></li>
 </ul>
@@ -583,9 +485,9 @@ ontime &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(ontime)</code></pre></div>
 <pre><code>## files:
-##     n      size                              path
-## 1 365  6.719 GB  /home/bbaumer/dumps/airlines/raw
-## 2 363 19.536 GB /home/bbaumer/dumps/airlines/load</code></pre>
+##    n     size                              path
+## 1 13 0.193 GB  /home/bbaumer/dumps/airlines/raw
+## 2 11  0.49 GB /home/bbaumer/dumps/airlines/load</code></pre>
 <pre><code>##       Length Class           Mode       
 ## con   1      MySQLConnection S4         
 ## disco 2      -none-          environment</code></pre>
@@ -604,7 +506,7 @@ macleish <- etl("macleish", dir = "~/dumps/macleish")
 ```
 
 ```
-## ~/dumps/macleish/file4d6733f35064.sqlite3
+## ~/dumps/macleish/file350765b7518.sqlite3
 ```
 
 ```r
@@ -618,9 +520,9 @@ summary(macleish)
 
 ```
 ## files:
-##   n     size                              path
-## 1 2 0.022 GB  /home/bbaumer/dumps/macleish/raw
-## 2 2 0.019 GB /home/bbaumer/dumps/macleish/load
+##   n size                              path
+## 1 0 0 GB  /home/bbaumer/dumps/macleish/raw
+## 2 0 0 GB /home/bbaumer/dumps/macleish/load
 ```
 
 ```
@@ -641,46 +543,13 @@ summary(macleish)
 ##   invisible(obj)
 ## }
 ## &lt;environment: namespace:etl&gt;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getS3method</span>(<span class="st">&quot;etl_create&quot;</span>, <span class="st">&quot;default&quot;</span>)</code></pre></div>
-<pre><code>## function(obj, ...) {
-##   obj &lt;- obj %&gt;%
-##     etl_init(...) %&gt;%
-##     etl_update(...) %&gt;%
-##     etl_cleanup(...)
-##   invisible(obj)
-## }
-## &lt;environment: namespace:etl&gt;</code></pre>
-</section><section id="common-use-cases" class="slide level2">
-<h2>Common use cases</h2>
-<ul>
-<li>Regular updates for updated data
-<ul>
-<li>daily dump of overwritten customer data</li>
-</ul></li>
-<li>Regular updates for new data
-<ul>
-<li>rotate web logs</li>
-</ul></li>
-<li>Asynchronous updates
-<ul>
-<li>recover from network disruption or file corrpution</li>
-</ul></li>
-<li>Reconfigure and reload
-<ul>
-<li>update database after software update</li>
-</ul></li>
-<li>Porting a database
-<ul>
-<li>publish local database to remote server</li>
-</ul></li>
-</ul>
-</section>
-<section id="extend-etl" class="titleslide slide level1"><h2 class="shout">Extend <code>etl</code></h2></section><section id="roll-your-own" class="slide level2">
-<h2>Roll your own!</h2>
+</section><section id="extending-etl" class="slide level2">
+<h2>Extending <code>etl</code></h2>
 <div class="double">
 <ul>
 <li><a href="https://github.com/beanumber/etl/blob/master/vignettes/extending_etl.Rmd">Extending <code>etl</code></a> vignette</li>
 <li><code>create_etl_package()</code></li>
+<li>Sensible <code>default</code> methods</li>
 <li>Write (at least one of) 3 methods:
 <ul>
 <li><code>etl_extract.foo()</code></li>
@@ -691,75 +560,15 @@ summary(macleish)
 </ul>
 <p><img src="https://media.giphy.com/media/pEkXP4ykLnHFK/giphy.gif" class="one-col-image" /> </br></br></br></br></br></p>
 </div>
-</section><section id="template-etl_extract" class="slide level2">
-<h2>Template: <code>etl_extract</code></h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">etl_extract.etl_pkgname &lt;-<span class="st"> </span><span class="cf">function</span>(obj, ...) {
-  raw_dir &lt;-<span class="st"> </span><span class="kw">attr</span>(obj, <span class="st">&quot;raw_dir&quot;</span>)
-  
-  <span class="co"># write code to download files to raw_dir</span>
-  <span class="co"># use params in ... to fetch the appropriate files</span>
-  
-  <span class="kw">invisible</span>(obj)
-}</code></pre></div>
-</section><section id="template-etl_transform" class="slide level2">
-<h2>Template: <code>etl_transform</code></h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">etl_transform.etl_pkgname &lt;-<span class="st"> </span><span class="cf">function</span>(obj, ...) {
-  raw_dir &lt;-<span class="st"> </span><span class="kw">attr</span>(obj, <span class="st">&quot;raw_dir&quot;</span>)
-  <span class="co"># use params in ... to fetch the appropriate files</span>
-  <span class="co"># read the data in</span>
-  raw_data &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_csv</span>()
-  
-  <span class="co"># write code to transform, clean, etc.</span>
-  
-  load_dir &lt;-<span class="st"> </span><span class="kw">attr</span>(obj, <span class="st">&quot;load_dir&quot;</span>)
-  <span class="co"># write a CSV to load_dir</span>
-  readr<span class="op">::</span><span class="kw">write_csv</span>()
-  
-  <span class="kw">invisible</span>(obj)
-}</code></pre></div>
-</section><section id="template-etl_load" class="slide level2">
-<h2>Template: <code>etl_load</code></h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">etl_load.etl_pkgname &lt;-<span class="st"> </span><span class="cf">function</span>(obj, ...) {
-  load_dir &lt;-<span class="st"> </span><span class="kw">attr</span>(obj, <span class="st">&quot;load_dir&quot;</span>)
-  <span class="co"># use params in ... to fetch the appropriate files</span>
-  
-  <span class="co"># load the CSV(s) into SQL</span>
-  DBI<span class="op">::</span><span class="kw">dbWriteTable</span>(obj<span class="op">$</span>con, <span class="st">&quot;mytable&quot;</span>, path_to_csv)
-  
-  <span class="kw">invisible</span>(obj)
-}</code></pre></div>
-</section><section id="other-features" class="slide level2">
-<h2>Other Features</h2>
-<ul>
-<li><code>etl_update()</code> chains ETL operations</li>
-<li><code>etl_cleanup()</code> deletes files</li>
-<li><code>smart_download()</code> only downloads files that don’t already exist</li>
-<li>helper functions for matching dates in filenames</li>
-<li>Hard-coded SQL schema scripts
-<ul>
-<li>Optimize with keys, indexes, partitions, etc.</li>
-</ul></li>
-</ul>
-</section>
-<section id="conclusion" class="titleslide slide level1"><h2 class="shout">Conclusion</h2></section><section id="the-future" class="slide level2">
-<h2>The Future</h2>
-<ul>
-<li>Write more <code>etl</code> packages!</li>
-<li>Performance enhancements:
-<ul>
-<li><strike>Use <code>:memory:</code> instead of disk for SQLite?</strike></li>
-<li>Use <code>feather</code> for intermediate files?</li>
-<li>Parallelize?</li>
-<li>prefer <code>dbWriteTable()</code> methods that read CSVs</li>
-<li>avoid disk access</li>
-</ul></li>
-</ul>
 </section><section id="the-end" class="slide level2">
 <h2>The End</h2>
 <ul>
 <li>Thanks to the <a href="http://www.github.com/hadley/dplyr"><code>dplyr</code></a> and <a href="http://www.github.com/rstats-db"><code>rstats-db</code></a> developers!!</li>
-<li>Read the paper (<a href="https://arxiv.org/abs/1708.07073" class="uri">https://arxiv.org/abs/1708.07073</a>)</li>
-<li>Check out <a href="http://bit.ly/2pgFSfJ">these slides</a> </br></br></li>
+<li>Read the paper (<a href="https://arxiv.org/abs/1708.07073" class="uri">https://arxiv.org/abs/1708.07073</a>)
+<ul>
+<li>Coming soon to <em>Journal of Computational and Graphical Statistics</em>!</li>
+</ul></li>
+<li>Check out these slides: (<a href="https://bit.ly/2rGrW0p" class="uri">https://bit.ly/2rGrW0p</a>) </br></br></li>
 </ul>
 <p><img alt="beanumber" src="http://www.freepngimg.com/download/github/1-2-github-free-png-image.png" height="64px"> <a href="http://www.github.com/beanumber">beanumber</a>     <img alt="BaumerBen" src="https://cdn1.iconfinder.com/data/icons/logotypes/32/twitter-128.png" height="64px"> @<a href="https://twitter.com/BaumerBen">BaumerBen</a></p>
 </section>
