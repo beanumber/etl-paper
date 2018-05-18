@@ -385,28 +385,38 @@ trips %>%
 <li>roll your own!</li>
 </ul></li>
 </ul>
-</section><section id="example-1-mtcars" class="slide level2">
-<h2>Example 1: <code>mtcars</code></h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(etl)
+<!--
 
-cars &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st">&quot;mtcars&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_extract</span>() <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_transform</span>() <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">etl_load</span>()
+## Example 1: `mtcars`
 
-cars <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">tbl</span>(<span class="st">&quot;mtcars&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(cyl) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">N =</span> <span class="kw">n</span>(), <span class="dt">mean_mpg =</span> <span class="kw">mean</span>(mpg))</code></pre></div>
-<pre><code>## # Source:   lazy query [?? x 3]
-## # Database: sqlite 3.22.0 [/tmp/RtmpbDPxQD/file35077c24adb2.sqlite3]
+
+```r
+library(etl)
+
+cars <- etl("mtcars") %>%
+  etl_extract() %>%
+  etl_transform() %>%
+  etl_load()
+
+cars %>%
+  tbl("mtcars") %>%
+  group_by(cyl) %>%
+  summarize(N = n(), mean_mpg = mean(mpg))
+```
+
+```
+## # Source:   lazy query [?? x 3]
+## # Database: sqlite 3.22.0 [/tmp/Rtmp0L9ZmC/file3c1653596007.sqlite3]
 ##     cyl     N mean_mpg
-##   &lt;int&gt; &lt;int&gt;    &lt;dbl&gt;
+##   <int> <int>    <dbl>
 ## 1     4    11     26.7
 ## 2     6     7     19.7
-## 3     8    14     15.1</code></pre>
-</section><section id="example-2-airlines" class="slide level2">
-<h2>Example 2: <code>airlines</code></h2>
+## 3     8    14     15.1
+```
+
+-->
+</section><section id="example-airlines" class="slide level2">
+<h2>Example: <code>airlines</code></h2>
 <ul>
 <li>Create an empty database in MySQL</li>
 </ul>
@@ -419,8 +429,8 @@ cars <span class="op">%&gt;%</span>
 src_db &lt;-<span class="st"> </span><span class="kw">src_mysql_cnf</span>(<span class="st">&quot;airlines&quot;</span>, <span class="dt">groups =</span> <span class="st">&quot;aws&quot;</span>)
 
 ontime &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st">&quot;airlines&quot;</span>, <span class="dt">db =</span> src_db, <span class="dt">dir =</span> <span class="st">&quot;~/dumps/airlines&quot;</span>) </code></pre></div>
-</section><section id="example-2-airlines-contd" class="slide level2">
-<h2>Example 2: <code>airlines</code> cont’d</h2>
+</section><section id="example-airlines-contd" class="slide level2">
+<h2>Example: <code>airlines</code> cont’d</h2>
 <ul>
 <li>Perform ETL operations</li>
 </ul>
@@ -431,8 +441,8 @@ ontime &lt;-<span class="st"> </span><span class="kw">etl</span>(<span class="st
 <ul>
 <li class="fragment next">May take hours!</li>
 </ul>
-</section><section id="example-2-airlines-contd-1" class="slide level2">
-<h2>Example 2: <code>airlines</code> cont’d</h2>
+</section><section id="example-airlines-contd-1" class="slide level2">
+<h2>Example: <code>airlines</code> cont’d</h2>
 <ul>
 <li>Q: Which airline had the shortest average delay at IAD?</li>
 </ul>
@@ -506,7 +516,7 @@ macleish <- etl("macleish", dir = "~/dumps/macleish")
 ```
 
 ```
-## ~/dumps/macleish/file350765b7518.sqlite3
+## ~/dumps/macleish/file3c166f86cbba.sqlite3
 ```
 
 ```r

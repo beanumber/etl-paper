@@ -301,7 +301,9 @@ big    | many TB or more | cluster | Spark?
     * [`fec`](http://www.github.com/beanumber/fec)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/fec.svg?branch=master)](https://travis-ci.org/beanumber/fec)
     * [`citibike`](http://www.github.com/beanumber/citibike)  &nbsp; [![Travis-CI Build Status](https://travis-ci.org/beanumber/citibike.svg?branch=master)](https://travis-ci.org/beanumber/citibike)
     * roll your own!
-    
+
+<!--
+
 ## Example 1: `mtcars`
 
 ```{r, message=FALSE, warning=FALSE}
@@ -318,7 +320,9 @@ cars %>%
   summarize(N = n(), mean_mpg = mean(mpg))
 ```
 
-## Example 2: `airlines`
+-->
+
+## Example: `airlines`
 
 - Create an empty database in MySQL
 
@@ -336,7 +340,7 @@ src_db <- src_mysql_cnf("airlines", groups = "aws")
 ontime <- etl("airlines", db = src_db, dir = "~/dumps/airlines") 
 ```
 
-## Example 2: `airlines` cont'd
+## Example: `airlines` cont'd
 
 - Perform ETL operations
 
@@ -350,7 +354,7 @@ ontime %>%
 > - May take hours!
 
 
-## Example 2: `airlines` cont'd
+## Example: `airlines` cont'd
 
 - Q: Which airline had the shortest average delay at IAD? 
 
