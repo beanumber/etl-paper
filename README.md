@@ -7,11 +7,11 @@ The paper
 "A Grammar for Reproducible and Painless Extract-Transform-Load Operations on Medium Data"
 
 -   arXiv, 8(23), 1-24. (<https://arxiv.org/abs/1708.07073>)
--   *Journal of Computational and Statistical Graphics*, accepted
+-   *Journal of Computational and Statistical Graphics*, in press
 
 Talks
 -----
 
 -   [Dartmouth Biomedical Data Science talk](https://beanumber.github.io/etl-paper/dartmouth_talk.html)
 -   [Symposium on Statistics and Data Science](http://ww2.amstat.org/meetings/sdss/2018/onlineprogram/AbstractDetails.cfm?AbstractID=304456) [talk](https://beanumber.github.io/etl-paper/sdss_2018.html)
--   Joint Statistical Meetings
+-   [Joint Statistical Meetings talk](https://beanumber.github.io/etl-paper/jsm_2018.html)

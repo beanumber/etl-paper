@@ -1,7 +1,7 @@
 ---
 title: "ETL for Medium Data"
 author: "Ben Baumer"
-date: "August 1, 2018 <br> (https://bit.ly/2rGrW0p)"
+date: "July 31, 2018 <br> (https://bit.ly/2LzLZtm)"
 output:
   rmdshower::shower_presentation:
     self_contained: false
@@ -40,9 +40,9 @@ section.grey h2 {
 
 <p class="white">
 Benjamin S. Baumer</br>
-https://bit.ly/2rGrW0p</br>
-Symposium on Statistics and Data Science</br>
-May 17th, 2018
+https://bit.ly/2LzLZtm</br>
+Joint Statistical Meetings</br>
+July 31st, 2018
 </p>
 
 ## Four distinct ideas/challenges
@@ -441,7 +441,7 @@ getS3method("etl_update", "default")
 - Thanks to the [`dplyr`](http://www.github.com/hadley/dplyr) and [`rstats-db`](http://www.github.com/rstats-db) developers!!
 - Read the paper (https://arxiv.org/abs/1708.07073)
     - Coming soon to *Journal of Computational and Graphical Statistics*!
-- Check out these slides: (https://bit.ly/2rGrW0p)
+- Check out these slides: (https://bit.ly/2LzLZtm)
 </br></br>
 
 <img alt="beanumber" src="http://www.freepngimg.com/download/github/1-2-github-free-png-image.png" height="64px"> [beanumber](http://www.github.com/beanumber)
