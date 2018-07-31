@@ -335,7 +335,7 @@ system("mysql -e 'CREATE DATABASE IF NOT EXISTS airlines;'")
 ```{r, eval=TRUE}
 library(airlines)
 
-src_db <- src_mysql_cnf("airlines", groups = "aws")
+src_db <- src_mysql_cnf("airlines")
 
 ontime <- etl("airlines", db = src_db, dir = "~/dumps/airlines") 
 ```
@@ -356,12 +356,12 @@ ontime %>%
 
 ## Example: `airlines` cont'd
 
-- Q: Which airline had the shortest average delay at IAD? 
+- Q: Which airline had the shortest average delay at SEA? 
 
 ```{r, warning=FALSE}
 ontime %>%
   tbl("flights") %>%
-  filter(year == 2010, dest == "IAD") %>%
+  filter(year == 2010, dest == "SEA") %>%
   group_by(carrier) %>%
   summarize(num_flights = n(), 
             begin = min(month), end = max(month), 
