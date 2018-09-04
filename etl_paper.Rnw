@@ -185,7 +185,7 @@ Thus, with just a few simple lines of \R code---and no knowledge of SQL---the \p
 \subsection{Reproducible research with Citi Bike data}
 \label{sec:bikes}
 
-The following example using the \pkg{citibike} package illustrates how reproducibility of published research in the natural and social sciences could be improved through use of the \pkg{etl} framework. 
+%The following example using the \pkg{citibike} package illustrates how reproducibility of published research in the natural and social sciences could be improved through use of the \pkg{etl} framework. 
 
 The lack of reproducibility in published scientific research in the natural and social sciences is problematic. Here, we revisit a series of operations research efforts analyzing load balancing for stations in the Citi Bike municipal bike sharing system in New York City~\citep{o2015data,singhvi2015predicting,o2015smarter} and demonstrate how the \pkg{etl} framework improves data analytic workflows. The data from this system has fueled several research efforts since its launch in July 2013. 
 

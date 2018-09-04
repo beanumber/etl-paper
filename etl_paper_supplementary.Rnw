@@ -1,0 +1,332 @@
+\documentclass[12pt]{article}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage{alltt}%
+\usepackage{hyperref}
+\usepackage{makeidx,epsfig}
+\usepackage{graphicx,psfrag,epsf}
+\usepackage{enumerate}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{xspace,xcolor,soul}
+
+%\pdfminorversion=4
+% NOTE: To produce blinded version, replace "0" with "1" below.
+\newcommand{\blind}{0}
+
+% DON'T change margins - should be 1 inch all around.
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.5in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.3in}%
+\addtolength{\topmargin}{-.8in}%
+
+% define macros
+\newcommand{\ben}[1]{\sethlcolor{green}\hl{[BB]: #1}}
+\newcommand{\nick}[1]{\sethlcolor{yellow}\hl{[NH]: #1}}
+\newcommand{\pkg}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\argument}[1]{\hlkwc{\texttt{#1}}}
+\newcommand{\func}[1]{\hlkwd{\texttt{#1}()}}
+\newcommand{\var}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\val}[1]{\hlnum{\texttt{#1}}}
+\newcommand{\charvec}[1]{\hlstr{\texttt{#1}}}
+\newcommand{\data}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\cmd}[1]{\hlkwa{\texttt{#1}}}
+\newcommand{\obj}[1]{\hlstd{\texttt{#1}}}
+\newcommand{\R}{\textsf{R}\xspace}
+
+\author{Benjamin S. Baumer~\thanks{, , Northampton, MA 01063. }}
+
+\begin{document}
+
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\vfill
+
+\newpage
+\spacingset{1.45} % DON'T change the spacing!
+
+
+<<eval=FALSE, include=FALSE>>=
+install.packages("devtools")
+library(devtools)
+install_github("beanumber/etl")
+install_github("beanumber/citibike")
+install_github("beanumber/airlines")
+@
+
+
+
+\newpage
+
+\vspace{3cm}
+
+\begin{center}
+{\Large  {\bf Supplementary Materials for: \\ 
+
+\vspace{2cm}
+
+A Grammar for Reproducible and Painless Extract-Transform-Load Operations\\on Medium Data
+
+}}
+\end{center}
+
+
+
+\newpage
+
+\appendix
+
+Our supplementary materials contain an extended discussion of how our work fits into the existing \R ecosystem, another short example of how to use the \pkg{etl} package, some brief performance benchmarks, and an illustration of how to use cloud computing resources with the \pkg{etl} package. 
+
+\section{Extended discussion of related work}
+\label{sec:related}
+
+In this section we summarize the major considerations that make the \pkg{etl} package a progressive step towards reproducible research on medium data for \R users.
+
+
+\subsection{Reproducible research}
+
+To understand the current challenges we face in conducting reproducible research on PAMDAS, one must start with the notion of literate programming~\citep{knuth1984literate}. In literate programming, source code is woven into an annotated narrative, so that one could read the source code and understand not just the code itself, but also how each piece of code fits into the larger design.  
+
+This idea leads to the notion of \emph{reproducibility} in computational science. \cite{donoho2010invitation} paraphrases~\cite{claerbout1994hypertext}: 
+\begin{quotation}
+An article about a computational result is advertising, not scholarship. The actual scholarship is the full software environment, code and data, that produced the result.
+\end{quotation}
+
+\cite{ioannidis2005most} argues that most published research is false, and while his arguments are \emph{statistical} rather than \emph{computational}, they only help to underscore the importance of computational reproducibility. 
+
+In academia, a diverse set of fields including computer science~\citep{donoho2009reproducible}, economics~\citep{tier2012}, archeology~\citep{marwick2017computational} and neuroscience~\citep{eglen2017toward} are actively debating how they will recognize reproducible research. Organizations like Project TIER (\url{http://www.projecttier.org/}) and the Open Science Framework (\url{https://osf.io/}) provide protocols for conducting reproducible research, while statistics and data science educators are instilling reproducible practices in their students~\citep{baumer2014r}. Top-tier journals like the \textit{Journal of the American Statistical Association} have appointed reproducibility editors~\citep{amstat2016jasa}. 
+
+Thus, while the need for research in all fields to be reproducible is clear, the specifications for what qualifies as reproducible are less clear, and the path towards achieving reproducibility is murkier still. 
+
+\subsection{Medium data}
+
+In the past few years, \emph{big data} has become an omnipresent buzzword that taps into our collective fascination with things that are massive. However, while a few enormous companies (e.g., Google, Facebook, Amazon, Walmart, etc.) generate and analyze truly big data (on the order of \emph{exabytes} (EB), which are equal to 1000 \emph{petabytes} (PB), which are equal to 1000 \emph{terabytes} (TB), which are equal to 1000 \emph{gigabytes} (GB)), most people who analyze data will never interact meaningfully with \href{https://en.wikipedia.org/wiki/Orders_of_magnitude_(data)}{data of that size}. 
+
+Most people will only encounter data that is \emph{small} (a few gigabytes at most). These data fit effortlessly into a computer's memory, and thus the user experiences no challenges related to the data's size. Because a computer can access data in memory at lightning-fast speeds, efficient data analysis algorithms like searching ($O(n)$), sorting ($O(n \log{n})$), and multiplying matrices (e.g., fitting a regression model) ($O(n^{2.376})$~\citep{williams2012multiplying}) will run nearly instantly---even on a laptop.~\footnote{Computer scientists use Big-O notation to describe the running time of algorithms by comparing the order of magnitude of the number of steps the algorithm takes to execute on an input of size $n$. An algorithm that runs in $O(n)$ time is \emph{linear}, in the sense that the amount of time it will take to run is linearly proportional to the size of the input.} Thus, for people working with small data, fundamental computer science concepts like the distinction between hardware and software, algorithmic efficiency, and bus speeds are immaterial. 
+
+
+
+For the vast majority of us who are unlikely to ever interact meaningfully with truly big data, \emph{medium data} is both a viable solution and an accessible introduction to the challenges of big data~\citep{horton2015setting}. In Table~1,
+%\ref{tab:data}
+we constrast the relative sizes of data from the point of view of a personal computer user. Medium data is on the order of several gigabytes to a few terabytes. These data are large enough that they will not comfortably fit in memory on a personal computer without consequences, making a memory-only application like (vanilla) \R a dubious candidate for data analysis. However, medium data are not so large they won't fit on a single hard disk, making them accessible to a single user without access to a computing cluster. An SQL-based RDBMS remains an appropriate storage and retrieval solution for medium data.  
+
+
+\subsection{Existing challenges}
+
+The fundamental challenge of big data is scalability, but medium data comes with its own challenges. In the end, investment in properly setting up an RDBMS pays off in more efficient analysis.
+
+First, everything with medium data takes a little longer, since the aforementioned algorithms are no longer instantaneous. A single line of code might take one minute to execute instead of a millisecond, but these brief delays compound. Thus, those who employ efficient code and workflows are rewarded for their efforts with shorter execution times. 
+
+Second, a data analyst has to know something about SQL administration in order to set up a database. Many introductory data science courses that teach SQL focus on writing \cmd{SELECT} queries to retrieve data from an existing database---not on writing table schemas and defining keys and indexes~\citep{hardin2015data}. 
+
+Third, getting PAMDAS set up involves often laborious ETL operations. Downloading medium data is not instantaneous and is dependent on the speed of one's Internet connection. Wrangling data is notoriously time-consuming work: reasonable estimates suggest this may occupy as much as 50--80\% of a data scientist's time. 
+
+For these reasons, a responsible data scientist will record their ETL operations in a script. But these scripts are often problematic, ad hoc solutions. Some common problems include:
+\begin{description}
+  \item[Portability] Shell scripts may not port across operating systems. While Apple's OS X operating system is POSIX-compliant, not all flavors of GNU/Linux are. Microsoft Windows \href{https://en.wikipedia.org/wiki/POSIX#Mostly_POSIX-compliant}{requires additional software} to implement a compatibility layer, and thus any such scripts are not likely to run on Windows without careful modification. 
+  \item[Usability] Under time pressure, data scientists are likely to write scripts that work for them, and not necessarily for other people. Their scripts may be idiosyncratic and difficult for another person to use or modify. 
+  \item[Version Control] Even if a data scientist uses a formal version control system like \cmd{git} and GitHub, a script that ran when it was written may not run at all points in the future. 
+  \item[Languages] ETL scripts may be written in \cmd{bash}, Python, \R, SQL, Perl, PHP, Ruby, Scala, Julia, or any combination of these languages and others. There may be good reasons for mixing different languages but ease of portability decreases with each additional language. 
+\end{description}
+
+One recommended solution for bundling ETL scripts for \R users is to create an \R package~\citep{wickham2015r}. Packages provide users with software that extends the core functionality of \R, and often data that illustrates the use of that functionality. \R packages hosted on CRAN---the authoritative central repository---are checked for quality and documentation, helping to ensure their \emph{usability}. Since \R is cross-platform, these packages are \emph{portable}. CRAN itself maintains distinct \emph{versioning}, and while \R packages are mostly written in \R, there are a number of ways in which code from other \emph{languages} can be embedded into an \R package (e.g., \pkg{Rcpp} provides functionality to bundle \cmd{C++} code~\citep{Rcpp}). 
+
+However, by design the types of data that can be contained in an \R package hosted on CRAN are limited. First, packages are designed to be small, so that the amount of data stored in a package is supposed to be less than 5 \emph{megabytes}. Furthermore, these data are static, in that CRAN allows only monthly releases. Alternative package repositories---such as GitHub---are also limited in their ability to store and deliver data that could be changing in real-time to \R users. In Table~\ref{tab:flights} we contrast two different CRAN packages for on-time airline flight data~\citep{nycflights13, hflights}, with an \pkg{etl}-dependent package that allows the user to build their own database of flight data~\citep{airlines}. We note the change in scope that the \pkg{airlines} package allows: whereas the two existing data sets are restricted to small, static data from flights departing two Houston-area airports in 2011, or three New York City-area airports in 2013, respectively, the \pkg{airlines} package covers all domestic flights since 1987 departing from more than 350 airports nationwide, with more data available monthly. 
+
+\begin{table}
+  \centering
+  \begin{tabular}{cccc}
+package       & timespan & airports & size \\
+\hline
+\pkg{hflights}    &  2011  & IAH, HOU  & 2.1 MB \\ 
+\pkg{nycflights13} & 2013 & LGA, JFK, EWR & 4.4 MB \\
+\pkg{airlines} & 1987--present & $\approx 350$ &  $> 6$ GB \\
+\hline
+  \end{tabular}
+  \caption{Alternative packaging of on-time flight data from the Bureau of Transportation Statistics in \R. We note that the full scope of flight data is only accessible through the \pkg{airlines} package. \label{tab:flights}}
+\end{table}
+
+Many \R packages facilitate the retrieval of data from specific sources. In particular, the rOpenSci group maintains dozens of such packages~\citep{boettiger2015building}. Other popular small CRAN packages that serve as APIs to large data sets include \pkg{tigris}~\citep{tigris} and \pkg{UScensus2010}~\citep{UScensus2010}. While these packages are undoubtedly useful, they are written by many different authors, and the syntax employed across packages varies greatly. In short, there is no consistent ``grammar" (see Section~3).
+%\ref{sec:grammar}
+These packages are peripherals without a core. 
+
+Some dependency approaches do exist. \cite{peng2008statistical} illustrate how a small package for CRAN that interacts with large data repositories not hosted on CRAN could facilitate research in environmental epidemiology. These repositories are maintained by the package author through the use of a second package~\citep{eckel2009interacting}. More recently, the \pkg{drat} package provides a core that facilitates the creation of peripheral packages~\citep{drat}. In this scheme the peripheral packages contain large amounts of data. The major drawback to both of these approaches is the requirement that the researcher maintain the large data repositories. 
+
+\cite{boettiger2015introduction} advocates for the container-based solution Docker as an alternative packaging structure for reproducible research, and more recently Rocker~\citep{boettiger2017introduction}, which provides Docker containers for \R and RStudio. \cite{ccetinkaya2017infrastructure} promote this approach as university instructors. We see \pkg{etl} as fitting nicely into this paradigm, serving to further reduce barriers to reproducibility.
+
+Perhaps the closest competitor to our approach is \pkg{pitchRx}~\citep{pitchRx}, which performs ETL operations for a specific data set---in this case, detailed pitch information from Major League Baseball. Our approach places similar core functionality in the \pkg{etl} package and separates the data-source-specific functionality into small, easy-to-write packages that can be hosted on CRAN. The developer need not maintain any large data repositories---they need only to maintain the small bits of code that interact with the data provider. If, for any reason, the source data changes, \pkg{etl} users still retain copies of the raw data as they downloaded it.  
+
+We imagine that many of these aforementioned packages could be re-factored to have \pkg{etl} as a depedendency.
+
+
+
+\section{A toy example}
+\label{sec:mtcars}
+
+Here, we illustrate the functionality of the \pkg{etl} package on the built-in \data{mtcars} data set.  
+
+The first step is to instantiate an \cmd{etl} object using the \func{etl} function. We use the \func{etl\_create} function to perform the entire ETL cycle on an object named \obj{my\_cars}. During this process, a local SQLite database is created in a temporary directory, that database is initialized, the \data{mtcars} data is ``downloaded" (i.e., in this case, from memory), transformed, and finally uploaded to that same SQLite database. 
+
+<<simple>>=
+library(etl)
+my_cars <- etl("mtcars") %>%
+  etl_create()
+@
+
+The object \obj{my\_cars} is both an \cmd{etl\_mtcars} object and a \cmd{src\_dbi} object---and can thus do anything that any other \cmd{src\_dbi} object can do. It also maintains a connection to the SQLite database, has two folders (e.g., \cmd{raw} and \cmd{load}) where it can store files, and knows about a table called \cmd{mtcars} that exists in the SQLite database. 
+
+<<class>>=
+class(my_cars)
+summary(my_cars)
+my_cars
+@
+
+Since \obj{my\_cars} is a \pkg{DBI} data source, the data stored in the SQLite database can be accessed in the usual manner. Here, we compute the average fuel economy for these cars. Note that these computations are performed by SQLite. 
+
+<<mtcars-summary>>=
+my_cars %>%
+  tbl("mtcars") %>%
+  group_by(cyl) %>%
+  summarize(N = n(), mean_mpg = mean(mpg))
+@
+
+The \obj{my\_cars} object itself occupies very little of \R's memory. 
+
+<<memory-footprint>>=
+my_cars %>%
+  object.size() %>%
+  print(units = "Kb")
+@
+
+
+
+\section{Benchmarking}
+\label{sec:benchmark}
+
+Recall that in Section~2.2
+%\ref{sec:bikes} 
+we created a \cmd{tbl\_dbi} called \obj{trips} that is connected to a database table of Citi Bike trip rentals. In this example we illustrate how the ability of \pkg{dplyr} to offload certain computations to SQL can result in marked performance improvements, even on the same computer. 
+
+<<trips, message=FALSE>>=
+library(citibike)
+bikes <- etl("citibike", dir = "~/dumps/citibike/",
+             db = src_mysql_cnf("citibike"))
+trips <- bikes %>%
+  tbl("trips")
+class(trips)
+@
+
+Previously, we used the following pipeline to compute the number of unique combinations of stations, days, and hours in the month of September 2013. In the code below, we make use of the lazy evaluation design of \pkg{dplyr} to push the computation to MySQL. Note that the functions in uppercase are MySQL functions---not \R functions. The \func{collect} verb is applied only after the database is queried so that \R can count the number of resulting rows. Because MySQL is good at doing this type of operation, and only $167,258$ rows of data are sent from MySQL to \R, this computation takes only a few seconds. 
+
+<<citibike-example-fast>>=
+system.time(
+trips_sept <- trips %>%
+  filter(YEAR(start_time) == 2013) %>%
+  group_by(start_station_id, DAY(start_time), HOUR(start_time)) %>%
+  summarize(N = n(), 
+            num_stations = COUNT(DISTINCT(start_station_id)), 
+            num_days = COUNT(DISTINCT(DAYOFYEAR(start_time)))) %>%
+  collect() 
+)
+nrow(trips_sept)
+@
+
+Conversely, we can use the \pkg{lubridate} package for assistance with dates, and the \func{collect} function to bring the data into \R for summarization. Note here that only the \func{filter} operation is actually performed by MySQL, while the rest of the operations are performed in \R. 
+
+<<citibike-compute, message=FALSE>>=
+library(lubridate)
+system.time(
+trips_sept <- trips %>%
+  filter(YEAR(start_time) == 2013) %>%
+  collect() %>%
+  group_by(start_station_id, day(start_time), hour(start_time)) %>%
+  summarize(N = n(), 
+            num_stations = n_distinct(start_station_id), 
+            num_days = n_distinct(yday(start_time)))
+)
+nrow(trips_sept)
+@
+
+This latter method is much slower since it has to transfer more than 1 million rows of data from MySQL to \R, instead of only $167,258$. The delay with the second method is noticeable enough to start a conversation with students about scalability. 
+
+\section{Using Amazon RDS}
+\label{sec:amazon}
+
+In this section we provide a brief tutorial explaining how to set up a medium database of taxi trip information on Amazon RDS (a cloud-based service) and populate it. 
+
+First, you must set up an Amazon Web Services account at \url{https://aws.amazon.com/rds/}. Our goal is to launch a new relational database service instance. In this example we will create a MySQL database that uses the Free Usage Tier (to avoid fees). In Figure~\ref{fig:amazon_engine}, we show how to select the MySQL engine from among the available options. 
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{amazon_rds_engine}
+  \caption{Amazon RDS}
+  \label{fig:amazon_engine}
+\end{figure}
+
+Since we are simply testing this service, we select the ``Dev/Test" usage case, which is the only one that is available under the Free Usage Tier (see Figure~\ref{fig:amazon_use}).
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{amazon_rds_use}
+  \caption{Amazon RDS}
+  \label{fig:amazon_use}
+\end{figure}
+
+Next, in Figure~\ref{fig:amazon_db} we allocate only minimal resources to this database instance. The \cmd{db.t2.micro} instance has only 1 CPU and 1 gigabyte of memory. This is the only allowable configuration in the Free Usage Tier. 
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{amazon_rds_db}
+  \caption{Amazon RDS}
+  \label{fig:amazon_db}
+\end{figure}
+
+In Figure~\ref{fig:amazon_security}, we elect to make our database publicly accessible. This is an important deviation from the default, which is to restrict access to a Virtual Private Cloud. Without selecting ``Yes" here, we would not be able to connect to our database from our \R client. Please consult the documentation on Amazon in order to fully understand your security settings. Note also that by default, public access is only granted from \emph{your} IP address. 
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{amazon_rds_security}
+  \caption{Amazon RDS}
+  \label{fig:amazon_security}
+\end{figure}
+
+In the next step, we set up a username, password, and schema. These are specific to the MySQL instance on our cloud-based database server. 
+After accepting all of the default options on the remaining screens, our instance will launch. This process creates a virtual MySQL server that is running on Amazon's servers. The hostname for that server is shown in your Instance dashboard under ``Endpoint". 
+
+<<hostname>>=
+host <- "etl-test.cdc7tgkkqd0n.us-east-1.rds.amazonaws.com"
+@
+
+If we didn't set up a schema on the MySQL server called \charvec{nyctaxi} already, we can create one using the Terminal tab available in RStudio. Be sure to use the credentials for the MySQL instance that you specified. 
+
+<<amazon-setup, eval=FALSE, engine="bash">>=
+mysql -h etl-test.cdc7tgkkqd0n.us-east-1.rds.amazonaws.com -u bbaumer -p -e "CREATE DATABASE IF NOT EXISTS nyctaxi;"
+@
+
+Finally, we load the \pkg{nyctaxi} package and connect to our database instance. 
+
+<<amazon-rds, eval=FALSE>>=
+library(nyctaxi)
+db_rds <- src_mysql(dbname = "nyctaxi", 
+                    host = "etl-test.cdc7tgkkqd0n.us-east-1.rds.amazonaws.com",
+                    user = "bbaumer",
+                    password = "xxxxxxxx")
+@
+
+The \pkg{etl} grammar now allows us to easily populate the database. 
+
+<<amazon-taxi, eval=FALSE>>=
+rides <- etl("nyctaxi", db = db_rds, dir = "~/dumps/nyctaxi")
+rides %>%
+  etl_update(years = 2014, months = 3)
+@
+
+\bibliographystyle{agsm}
+\bibliography{refs}
+
+
+\end{document}
